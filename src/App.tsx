@@ -6,7 +6,7 @@ import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { TelegramService } from './services/telegramService';
-import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading'; // Import MarketAnalysis
+import { TelegramConfig, TradingSignal } from './types/trading';
 import { RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 
 function App() {
@@ -247,12 +247,7 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
-            <PriceChart
-              candles={candles.slice(-100)}
-              signals={displayAnalysis.signals} // <-- ĐÃ THÊM DÒNG NÀY
-              width={800}
-              height={400}
-            />
+            <PriceChart candles={candles.slice(-100)} width={800} height={400} />
           </div>
 
           {/* Right Column - Market Overview */}
