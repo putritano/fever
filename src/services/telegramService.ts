@@ -55,7 +55,6 @@ ${emoji} <b>BITCOIN TRADING SIGNAL</b> ${strengthEmoji}
 <b>Stop Loss:</b> $${signal.stop_loss.toFixed(2)}
 <b>Take Profit:</b> $${signal.take_profit.toFixed(2)}
 
-<b>Analysis:</b> ${signal.reason}
 
 <b>Risk/Reward:</b> ${this.calculateRiskReward(signal)}
 
