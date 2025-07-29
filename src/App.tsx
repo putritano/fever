@@ -135,7 +135,7 @@ function App() {
     // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
-                      timeSinceLastSignal > 6000; // 5 minutes cooldown
+                      timeSinceLastSignal > 6000; // 1 minutes cooldown
     
     if (shouldSend) {
       const currentPrice = candles[candles.length - 1].close;
