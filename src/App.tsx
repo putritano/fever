@@ -27,132 +27,223 @@ function App() {
   }, [candles]);
 
   // Enhanced analysis with AI
-  const [enhancedAnalysis, setEnhancedAnalysis] = useState(analysis);
+  const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [lastAiCall, setLastAiCall] = useState<number>(0);
 
+  // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
-    setEnhancedAnalysis(analysis); // Update enhancedAnalysis when basic analysis changes
-    if (candles.length > 0 && analysis) {
-      const lastCandleTime = candles[candles.length - 1].openTime;
-      // Trigger AI enhancement only if it's a new candle and not just a refetch of existing data
-      // Add a debounce or throttle if necessary for frequent updates
-      if (lastCandleTime !== lastSignalSent && analysis.signals.length > 0) {
-        const latestSignal = analysis.signals[analysis.signals.length - 1];
-        if (latestSignal.action !== 'HOLD') { // Only enhance BUY/SELL signals
-          console.log("Triggering AI enhancement for signal:", latestSignal.action);
-          TechnicalAnalyzer.generateEnhancedTradingSignals(candles, analysis.indicators, analysis.trend, analysis.momentum)
-            .then(signals => {
-              if (signals.length > 0) {
-                setEnhancedAnalysis(prev => ({
-                  ...prev!, // 'prev!' because we know analysis is not null here
-                  signals: signals
-                }));
-                setLastSignalSent(lastCandleTime); // Mark this candle's time as processed for AI
-                
-                // Send Telegram alert for the enhanced signal
-                if (telegramConfig.enabled) {
-                  const currentPrice = candles[candles.length - 1].close;
-                  telegramService.sendTradingAlert(signals[0], currentPrice);
-                }
-              }
-            })
-            .catch(err => {
-              console.error("Error enhancing signal with AI:", err);
-              // Fallback to basic analysis signal if AI fails
-              if (analysis.signals.length > 0) {
-                setEnhancedAnalysis(prev => ({
-                  ...prev!,
-                  signals: [analysis.signals[analysis.signals.length - 1]]
-                }));
-              }
-            });
-        }
-      }
+    if (!analysis || candles.length === 0) return;
+
+    // Check if current signal is actionable (BUY or SELL)
+    const currentSignal = analysis.signals[0];
+    const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+    
+    // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
+    const timeSinceLastAI = Date.now() - lastAiCall;
+    const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000; // 5 minutes
+
+    if (!shouldCallAI) {
+      // Use basic analysis without AI enhancement
+      setEnhancedAnalysis(analysis);
+      return;
     }
-  }, [candles, analysis, telegramConfig.enabled, telegramService, lastSignalSent]); // Add lastSignalSent to dependency array
 
-  // Update telegramService config if it changes
-  useEffect(() => {
-    telegramService.updateConfig(telegramConfig);
-  }, [telegramConfig, telegramService]);
+    const enhanceWithAI = async () => {
+      setAiProcessing(true);
+      setLastAiCall(Date.now());
+      
+      try {
+        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation`);
+        const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
+        const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
+          candles, 
+          indicators, 
+          analysis.trend, 
+          analysis.momentum
+        );
+        
+        setEnhancedAnalysis({
+          ...analysis,
+          signals: enhancedSignals
+        });
+        
+        console.log('✅ AI enhancement completed successfully');
+      } catch (error) {
+        console.error('AI enhancement failed:', error);
+        setEnhancedAnalysis(analysis); // Fallback to basic analysis
+      } finally {
+        setAiProcessing(false);
+      }
+    };
 
+    enhanceWithAI();
+  }, [analysis, candles, lastAiCall]);
 
-  const handleTelegramConfigChange = useCallback((newConfig: TelegramConfig) => {
-    setTelegramConfig(newConfig);
-    localStorage.setItem('telegram_bot_token', newConfig.botToken);
-    localStorage.setItem('telegram_chat_id', newConfig.chatId);
-    localStorage.setItem('telegram_enabled', String(newConfig.enabled));
-  }, []);
+  const indicators = useMemo(() => {
+    if (candles.length === 0) return null;
+    return TechnicalAnalyzer.getTechnicalIndicators(candles);
+  }, [candles]);
 
+  const priceChange = useMemo(() => {
+    if (candles.length < 2) return 0;
+    const current = candles[candles.length - 1].close;
+    const previous = candles[candles.length - 2].close;
+    return ((current - previous) / previous) * 100;
+  }, [candles]);
+
+  // Handle Telegram config changes
+  const handleTelegramConfigChange = useCallback((config: TelegramConfig) => {
+    setTelegramConfig(config);
+    telegramService.updateConfig(config);
+    
+    // Save to localStorage
+    localStorage.setItem('telegram_bot_token', config.botToken);
+    localStorage.setItem('telegram_chat_id', config.chatId);
+    localStorage.setItem('telegram_enabled', config.enabled.toString());
+  }, [telegramService]);
+
+  // Send test message
   const handleTestMessage = useCallback(async () => {
     const testSignal: TradingSignal = {
       action: 'BUY',
       confidence: 85,
       timestamp: Date.now(),
+      reason: 'Test message from Bitcoin Trading Analyzer',
       probability: 75,
-      strength: 'VERY_STRONG',
-      entry_price: candles[candles.length - 1]?.close || 0,
-      stop_loss: (candles[candles.length - 1]?.close || 0) * 0.98,
-      take_profit: (candles[candles.length - 1]?.close || 0) * 1.05,
+      strength: 'STRONG',
+      entry_price: candles.length > 0 ? candles[candles.length - 1].close : 50000,
+      stop_loss: candles.length > 0 ? candles[candles.length - 1].close * 0.98 : 49000,
+      take_profit: candles.length > 0 ? candles[candles.length - 1].close * 1.02 : 51000
     };
+    
     const success = await telegramService.sendTradingAlert(testSignal, testSignal.entry_price);
-    alert(success ? 'Test message sent!' : 'Failed to send test message.');
+    if (success) {
+      alert('Test message sent successfully!');
+    } else {
+      alert('Failed to send test message. Please check your configuration.');
+    }
   }, [telegramService, candles]);
 
-  const currentPrice = candles.length > 0 ? candles[candles.length - 1].close : 0;
-  const previousPrice = candles.length > 1 ? candles[candles.length - 2].close : currentPrice;
-  const priceChange = currentPrice - previousPrice;
-
-  const displayAnalysis = enhancedAnalysis || analysis;
-  const indicators = displayAnalysis?.indicators;
-
-
+  // Auto-send strong signals
+  useEffect(() => {
+    if (!enhancedAnalysis || !telegramConfig.enabled) return;
+    
+    const currentSignal = enhancedAnalysis.signals[0];
+    if (!currentSignal) return;
+    
+    // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
+    const timeSinceLastSignal = Date.now() - lastSignalSent;
+    const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
+                      timeSinceLastSignal > 300000; // 5 minutes cooldown
+    
+    if (shouldSend) {
+      const currentPrice = candles[candles.length - 1].close;
+      telegramService.sendTradingAlert(currentSignal, currentPrice).then(success => {
+        if (success) {
+          setLastSignalSent(Date.now());
+          console.log('Trading signal sent to Telegram');
+        }
+      });
+    }
+  }, [enhancedAnalysis, telegramConfig.enabled, telegramService, candles, lastSignalSent]);
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-gray-200">
-        <RefreshCw className="w-8 h-8 animate-spin mr-3" />
-        <p>Loading market data...</p>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-white">Loading market data...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-red-900/20 text-red-400">
-        <AlertTriangle className="w-8 h-8 mr-3" />
-        <p>Error: {error}</p>
-      </div>
-    );
-  }
-
-  if (!displayAnalysis || !indicators) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-gray-200">
-        <p>No analysis available. Please wait for data.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6 font-sans">
-      <header className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-        <h1 className="text-3xl font-bold text-blue-400">Bitcoin AI Trading Bot</h1>
-        <div className="flex items-center space-x-4">
-          <span className={`flex items-center text-sm font-medium ${isConnected ? 'text-green-500' : 'text-red-500'}`}>
-            {isConnected ? <Wifi className="w-5 h-5 mr-1" /> : <WifiOff className="w-5 h-5 mr-1" />}
-            {isConnected ? 'Online' : 'Offline'}
-          </span>
-          <span className="text-sm text-gray-400">Last Update: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : 'N/A'}</span>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center bg-red-900/20 border border-red-700 rounded-lg p-6">
+          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-4" />
+          <p className="text-red-400 mb-4">Error loading data: {error}</p>
           <button
             onClick={refetch}
-            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
-            title="Refresh Data"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto"
           >
-            <RefreshCw className="w-5 h-5" />
+            <RefreshCw className="w-4 h-4" />
+            <span>Retry</span>
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysis || !indicators) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white">Insufficient data for analysis</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Use enhanced analysis if available, otherwise fall back to basic analysis
+  const displayAnalysis = enhancedAnalysis || analysis;
+  const currentPrice = candles[candles.length - 1].close;
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <header className="bg-gray-800 border-b border-gray-700 p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Bitcoin Trading Analyzer</h1>
+            <div className="flex items-center space-x-2">
+              <p className="text-gray-400 text-sm">Real-time Professional Trading Analysis Dashboard</p>
+              {aiProcessing && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-blue-400">🤖 AI Confirming Signal...</span>
+                </div>
+              )}
+              {enhancedAnalysis && !aiProcessing && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-xs text-green-400">🤖 AI Confirmed</span>
+                </div>
+              )}
+              {enhancedAnalysis && !enhancedAnalysis.signals[0]?.reason.includes('🤖') && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span className="text-xs text-gray-400">Technical Only</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center space-x-2 mb-2">
+              {isConnected ? (
+                <Wifi className="w-4 h-4 text-green-400" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-red-400" />
+              )}
+              <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+                {isConnected ? 'LIVE' : 'DISCONNECTED'}
+              </span>
+            </div>
+            <div className="text-sm text-gray-400">Last Updated</div>
+            <div className="text-sm">{lastUpdate.toLocaleTimeString()}</div>
+            <button
+              onClick={refetch}
+              className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center space-x-1"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main>
+      <div className="max-w-7xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
@@ -191,12 +282,12 @@ function App() {
             <div>
               <h3 className="text-yellow-400 font-semibold mb-2">Risk Warning</h3>
               <p className="text-yellow-100 text-sm leading-relaxed">
-                Đừng tham lam. Lương của mày chỉ được 500 cành / ngày
+                Đừng tham lam. Lương của mày chỉ được 500 cành / ngày hôm nay thôi.
               </p>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
