@@ -176,7 +176,6 @@ export class TechnicalAnalyzer {
     // RSI Analysis
     if (indicators.rsi < 30) {
       score += 3;
-      reasons.push('RSI oversold (strong buy signal)');
     } else if (indicators.rsi > 70) {
       score -= 3;
       reasons.push('RSI overbought (strong sell signal)');
