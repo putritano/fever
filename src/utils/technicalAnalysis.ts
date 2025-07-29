@@ -169,7 +169,6 @@ export class TechnicalAnalyzer {
     momentum: string
   ): TradingSignal {
     let score = 0;
-    let reasons: string[] = [];
     
     // Historical pattern analysis for win rate prediction
     const historicalAccuracy = this.calculateHistoricalAccuracy(candles, indicators);
@@ -177,61 +176,47 @@ export class TechnicalAnalyzer {
     // RSI Analysis
     if (indicators.rsi < 30) {
       score += 3;
-      reasons.push('RSI oversold (strong buy signal)');
     } else if (indicators.rsi > 70) {
       score -= 3;
-      reasons.push('RSI overbought (strong sell signal)');
     } else if (indicators.rsi < 40) {
       score += 1;
-      reasons.push('RSI approaching oversold');
     } else if (indicators.rsi > 60) {
       score -= 1;
-      reasons.push('RSI approaching overbought');
     }
     
     // MACD Analysis
     if (indicators.macdHistogram > 0) {
       if (indicators.macd > indicators.macdSignal) {
         score += 2;
-        reasons.push('MACD bullish crossover');
       } else {
         score += 1;
-        reasons.push('MACD histogram positive');
       }
     } else if (indicators.macdHistogram < 0) {
       if (indicators.macd < indicators.macdSignal) {
         score -= 2;
-        reasons.push('MACD bearish crossover');
       } else {
         score -= 1;
-        reasons.push('MACD histogram negative');
       }
     }
     
     // Price vs Moving Averages
     if (currentPrice > indicators.sma20) {
       score += 2;
-      reasons.push('Price above SMA20 (bullish)');
     } else {
       score -= 2;
-      reasons.push('Price below SMA20 (bearish)');
     }
     
     if (indicators.ema12 > indicators.ema26) {
       score += 2;
-      reasons.push('EMA bullish cross');
     } else {
       score -= 2;
-      reasons.push('EMA bearish cross');
     }
     
     // Trend confirmation
     if (trend === 'BULLISH') {
       score += 2;
-      reasons.push('Bullish trend');
     } else if (trend === 'BEARISH') {
       score -= 2;
-      reasons.push('Bearish trend');
     }
     
     // Volume analysis
@@ -239,7 +224,6 @@ export class TechnicalAnalyzer {
     const avgVolume = candles.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20;
     if (currentVolume > avgVolume * 1.5) {
       score += Math.sign(score) * 1; // Amplify existing signal
-      reasons.push('High volume confirmation');
     }
     
     // Determine action and confidence
@@ -286,7 +270,6 @@ export class TechnicalAnalyzer {
       action,
       confidence: Math.round(confidence),
       timestamp: Date.now(),
-      reason: reasons.join(', '),
       probability: Math.round(probability),
       strength,
       entry_price: currentPrice,
