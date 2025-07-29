@@ -26,6 +26,44 @@ function App() {
     return TechnicalAnalyzer.analyzeMarket(candles);
   }, [candles]);
 
+  // Enhanced analysis with AI
+  const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
+  const [aiProcessing, setAiProcessing] = useState(false);
+
+  // Get AI-enhanced analysis periodically
+  useEffect(() => {
+    if (!analysis || candles.length === 0) return;
+
+    const enhanceWithAI = async () => {
+      setAiProcessing(true);
+      try {
+        const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
+        const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
+          candles, 
+          indicators, 
+          analysis.trend, 
+          analysis.momentum
+        );
+        
+        setEnhancedAnalysis({
+          ...analysis,
+          signals: enhancedSignals
+        });
+      } catch (error) {
+        console.error('AI enhancement failed:', error);
+        setEnhancedAnalysis(analysis); // Fallback to basic analysis
+      } finally {
+        setAiProcessing(false);
+      }
+    };
+
+    // Enhance analysis every 30 seconds to avoid API limits
+    const interval = setInterval(enhanceWithAI, 30000);
+    enhanceWithAI(); // Initial call
+
+    return () => clearInterval(interval);
+  }, [analysis, candles]);
+
   const indicators = useMemo(() => {
     if (candles.length === 0) return null;
     return TechnicalAnalyzer.getTechnicalIndicators(candles);
@@ -73,9 +111,9 @@ function App() {
 
   // Auto-send strong signals
   useEffect(() => {
-    if (!analysis || !telegramConfig.enabled) return;
+    if (!enhancedAnalysis || !telegramConfig.enabled) return;
     
-    const currentSignal = analysis.signals[0];
+    const currentSignal = enhancedAnalysis.signals[0];
     if (!currentSignal) return;
     
     // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
@@ -92,7 +130,7 @@ function App() {
         }
       });
     }
-  }, [analysis, telegramConfig.enabled, telegramService, candles, lastSignalSent]);
+  }, [enhancedAnalysis, telegramConfig.enabled, telegramService, candles, lastSignalSent]);
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -132,6 +170,8 @@ function App() {
     );
   }
 
+  // Use enhanced analysis if available, otherwise fall back to basic analysis
+  const displayAnalysis = enhancedAnalysis || analysis;
   const currentPrice = candles[candles.length - 1].close;
 
   return (
@@ -141,7 +181,21 @@ function App() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Bitcoin Trading Analyzer</h1>
-            <p className="text-gray-400 text-sm">Real-time Professional Trading Analysis Dashboard</p>
+            <div className="flex items-center space-x-2">
+              <p className="text-gray-400 text-sm">Real-time Professional Trading Analysis Dashboard</p>
+              {aiProcessing && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-blue-400">AI Analyzing...</span>
+                </div>
+              )}
+              {enhancedAnalysis && !aiProcessing && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-xs text-green-400">🤖 AI Enhanced</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <div className="flex items-center space-x-2 mb-2">
@@ -177,7 +231,7 @@ function App() {
           {/* Right Column - Market Overview */}
           <div>
             <MarketOverview
-              analysis={analysis}
+              analysis={displayAnalysis}
               indicators={indicators}
               currentPrice={currentPrice}
               priceChange={priceChange}
@@ -187,7 +241,7 @@ function App() {
 
         {/* Trading Signals */}
         <div className="mt-6">
-          <TradingSignals signals={analysis.signals} />
+          <TradingSignals signals={displayAnalysis.signals} />
         </div>
 
         {/* Telegram Settings */}

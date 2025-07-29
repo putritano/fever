@@ -1,6 +1,9 @@
 import { ProcessedCandle, TechnicalIndicators, TradingSignal, MarketAnalysis } from '../types/trading';
+import { GeminiService } from '../services/geminiService';
 
 export class TechnicalAnalyzer {
+  private static geminiService = new GeminiService();
+
   static calculateSMA(data: number[], period: number): number {
     if (data.length < period) return 0;
     const sum = data.slice(-period).reduce((a, b) => a + b, 0);
@@ -129,12 +132,28 @@ export class TechnicalAnalyzer {
     momentum: string
   ): TradingSignal[] {
     const currentPrice = candles[candles.length - 1].close;
-    const currentCandle = candles[candles.length - 1];
     
     // Analyze current tick for immediate action
     const signal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum);
     
     return [signal];
+  }
+
+  static async generateEnhancedTradingSignals(
+    candles: ProcessedCandle[], 
+    indicators: TechnicalIndicators, 
+    trend: string, 
+    momentum: string
+  ): Promise<TradingSignal[]> {
+    const currentPrice = candles[candles.length - 1].close;
+    
+    // Get basic technical analysis signal
+    const basicSignal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum);
+    
+    // Enhance with AI analysis
+    const enhancedSignal = await this.geminiService.enhanceAnalysis(candles, indicators, basicSignal);
+    
+    return [enhancedSignal];
   }
 
   static calculateCurrentTickSignal(
