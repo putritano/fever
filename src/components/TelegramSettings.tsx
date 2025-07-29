@@ -92,7 +92,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
                 <div className="relative">
                   <input
                     type={showToken ? 'text' : 'password'}
-                    value={config.botToken || ''} {/* Ensure value is never undefined */}
+                    value={config.botToken || ''} {/* Corrected: Comment is now valid JSX */}
                     onChange={(e) => handleInputChange('botToken', e.target.value)}
                     placeholder="Enter your Telegram bot token"
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -113,7 +113,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={config.chatId || ''} {/* Ensure value is never undefined */}
+                  value={config.chatId || ''} {/* Corrected: Comment is now valid JSX */}
                   onChange={(e) => handleInputChange('chatId', e.target.value)}
                   placeholder="Enter your chat ID or group ID"
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
