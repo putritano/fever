@@ -130,12 +130,6 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
                 <Send className="w-4 h-4" />
                 <span>Test Message</span>
               </button>
-
-              <div className="text-xs text-gray-400 space-y-1">
-                <p>• Chỉ gửi thông báo khi có tín hiệu STRONG hoặc VERY_STRONG</p>
-                <p>• Tạo bot tại: @BotFather trên Telegram</p>
-                <p>• Lấy Chat ID: @userinfobot hoặc @chatid_echo_bot</p>
-              </div>
             </>
           )}
         </div>
