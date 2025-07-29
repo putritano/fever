@@ -1,6 +1,9 @@
-// Trong components/PriceChart.tsx (ví dụ)
+// src/components/PriceChart.tsx
+
 import React, { useRef, useEffect } from 'react';
-import { createChart, IChartApi, ISeriesApi, CandlestickData, BarPrices } from 'lightweight-charts';
+// Thay đổi dòng import này:
+import { createChart } from 'lightweight-charts'; // Import createChart riêng
+import type { IChartApi, ISeriesApi, CandlestickData } from 'lightweight-charts'; // Import types riêng
 import { ProcessedCandle, TradingSignal } from '../types/trading';
 
 interface PriceChartProps {
@@ -39,12 +42,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({ candles, signals = [], w
       },
     });
 
-    // THÊM DÒNG NÀY ĐỂ DEBUG
-    console.log("Chart object after createChart:", chart);
+    console.log("Chart object after createChart:", chart); // Vẫn giữ dòng debug này
 
     chartRef.current = chart;
 
-    const candlestickSeries = chart.addCandlestickSeries({ // Dòng gây lỗi
+    // Kiểm tra lại một lần nữa trước khi gọi phương thức
+    if (typeof chart.addCandlestickSeries !== 'function') {
+      console.error("Lỗi: chart.addCandlestickSeries không phải là một hàm! Đối tượng chart:", chart);
+      return; // Dừng lại để tránh lỗi tiếp theo
+    }
+
+    const candlestickSeries = chart.addCandlestickSeries({
       upColor: '#10b981',
       downColor: '#ef4444',
       borderDownColor: '#ef4444',
