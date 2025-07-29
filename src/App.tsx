@@ -6,7 +6,7 @@ import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { TelegramService } from './services/telegramService';
-import { TelegramConfig, TradingSignal } from './types/trading';
+import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading'; // Import MarketAnalysis
 import { RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 
 function App() {
@@ -41,7 +41,7 @@ function App() {
     
     // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
     const timeSinceLastAI = Date.now() - lastAiCall;
-    const shouldCallAI = isActionableSignal && timeSinceLastAI > 6000; // 1 minutes
+    const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000; // 5 minutes
 
     if (!shouldCallAI) {
       // Use basic analysis without AI enhancement
@@ -135,7 +135,7 @@ function App() {
     // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
-                      timeSinceLastSignal > 6000; // 1 minutes cooldown
+                      timeSinceLastSignal > 300000; // 5 minutes cooldown
     
     if (shouldSend) {
       const currentPrice = candles[candles.length - 1].close;
@@ -247,7 +247,12 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
-            <PriceChart candles={candles.slice(-100)} width={800} height={400} />
+            <PriceChart
+              candles={candles.slice(-100)}
+              signals={displayAnalysis.signals} // <-- ĐÃ THÊM DÒNG NÀY
+              width={800}
+              height={400}
+            />
           </div>
 
           {/* Right Column - Market Overview */}
