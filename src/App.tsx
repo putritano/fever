@@ -29,14 +29,32 @@ function App() {
   // Enhanced analysis with AI
   const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
+  const [lastAiCall, setLastAiCall] = useState<number>(0);
 
-  // Get AI-enhanced analysis periodically
+  // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
     if (!analysis || candles.length === 0) return;
 
+    // Check if current signal is actionable (BUY or SELL)
+    const currentSignal = analysis.signals[0];
+    const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+    
+    // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
+    const timeSinceLastAI = Date.now() - lastAiCall;
+    const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000; // 5 minutes
+
+    if (!shouldCallAI) {
+      // Use basic analysis without AI enhancement
+      setEnhancedAnalysis(analysis);
+      return;
+    }
+
     const enhanceWithAI = async () => {
       setAiProcessing(true);
+      setLastAiCall(Date.now());
+      
       try {
+        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation`);
         const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
         const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
           candles, 
@@ -49,6 +67,8 @@ function App() {
           ...analysis,
           signals: enhancedSignals
         });
+        
+        console.log('✅ AI enhancement completed successfully');
       } catch (error) {
         console.error('AI enhancement failed:', error);
         setEnhancedAnalysis(analysis); // Fallback to basic analysis
@@ -57,12 +77,8 @@ function App() {
       }
     };
 
-    // Enhance analysis every 30 seconds to avoid API limits
-    const interval = setInterval(enhanceWithAI, 30000);
-    enhanceWithAI(); // Initial call
-
-    return () => clearInterval(interval);
-  }, [analysis, candles]);
+    enhanceWithAI();
+  }, [analysis, candles, lastAiCall]);
 
   const indicators = useMemo(() => {
     if (candles.length === 0) return null;
@@ -186,13 +202,19 @@ function App() {
               {aiProcessing && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-blue-400">AI Analyzing...</span>
+                  <span className="text-xs text-blue-400">🤖 AI Confirming Signal...</span>
                 </div>
               )}
               {enhancedAnalysis && !aiProcessing && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-xs text-green-400">🤖 AI Enhanced</span>
+                  <span className="text-xs text-green-400">🤖 AI Confirmed</span>
+                </div>
+              )}
+              {enhancedAnalysis && !enhancedAnalysis.signals[0]?.reason.includes('🤖') && (
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                  <span className="text-xs text-gray-400">Technical Only</span>
                 </div>
               )}
             </div>

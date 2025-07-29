@@ -6,7 +6,7 @@ export class GeminiService {
   private model: any;
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI('AIzaSyDQGpC-oFv0NlcMXNyTcm0NB-66pX7012M');
+    this.genAI = new GoogleGenerativeAI('AIzaSyDmML_8kM32pAy6Rr6WOwbbO8W-S5j_5Go');
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
   }
 
@@ -16,6 +16,7 @@ export class GeminiService {
     currentSignal: TradingSignal
   ): Promise<TradingSignal> {
     try {
+      console.log(`🤖 Gemini AI analyzing ${currentSignal.action} signal...`);
       const marketData = this.prepareMarketData(candles, indicators, currentSignal);
       const prompt = this.createAnalysisPrompt(marketData);
       
@@ -23,7 +24,9 @@ export class GeminiService {
       const response = await result.response;
       const aiAnalysis = response.text();
       
-      return this.parseAIResponse(aiAnalysis, currentSignal, candles[candles.length - 1].close);
+      const enhancedSignal = this.parseAIResponse(aiAnalysis, currentSignal, candles[candles.length - 1].close);
+      console.log(`✅ AI confirmed ${enhancedSignal.action} with ${enhancedSignal.confidence}% confidence`);
+      return enhancedSignal;
     } catch (error) {
       console.error('Gemini AI analysis failed:', error);
       // Return original signal if AI fails

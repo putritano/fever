@@ -150,10 +150,15 @@ export class TechnicalAnalyzer {
     // Get basic technical analysis signal
     const basicSignal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum);
     
-    // Enhance with AI analysis
-    const enhancedSignal = await this.geminiService.enhanceAnalysis(candles, indicators, basicSignal);
+    // Only enhance with AI if signal is BUY or SELL (not HOLD)
+    if (basicSignal.action === 'BUY' || basicSignal.action === 'SELL') {
+      console.log(`🤖 AI Enhancement triggered for ${basicSignal.action} signal`);
+      const enhancedSignal = await this.geminiService.enhanceAnalysis(candles, indicators, basicSignal);
+      return [enhancedSignal];
+    }
     
-    return [enhancedSignal];
+    // Return basic signal for HOLD actions without AI enhancement
+    return [basicSignal];
   }
 
   static calculateCurrentTickSignal(
