@@ -28,7 +28,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
 
     // Set default botToken if not already set or is empty
     if (!updatedConfig.botToken || updatedConfig.botToken === 'YOUR_BOT_TOKEN_HERE') {
-      updatedConfig.botToken = 'YOUR_BOT_TOKEN_HERE';
+      updatedConfig.botToken = '7578707048:AAG5Vr667I-3LerfhO1YzYbgTinXJwuHmAA';
       changed = true;
     }
 
