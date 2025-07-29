@@ -169,7 +169,6 @@ export class TechnicalAnalyzer {
     momentum: string
   ): TradingSignal {
     let score = 0;
-    let reasons: string[] = [];
     
     // Historical pattern analysis for win rate prediction
     const historicalAccuracy = this.calculateHistoricalAccuracy(candles, indicators);
