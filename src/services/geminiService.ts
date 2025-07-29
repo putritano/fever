@@ -7,7 +7,7 @@ export class GeminiService {
 
   constructor() {
     this.genAI = new GoogleGenerativeAI('AIzaSyDmML_8kM32pAy6Rr6WOwbbO8W-S5j_5Go');
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   async enhanceAnalysis(
