@@ -77,10 +77,6 @@ export const TradingSignals: React.FC<TradingSignalsProps> = ({ signals }) => {
               {getConfidenceBar(signal.confidence)}
             </div>
             
-            <div className="text-sm opacity-80">
-              <strong>Analysis:</strong> {signal.reason}
-            </div>
-            
             {signal.action !== 'HOLD' && (
               <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                 <div className="bg-gray-900/50 p-2 rounded flex items-center space-x-1">
