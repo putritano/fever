@@ -73,7 +73,7 @@ export class GeminiService {
 
   private createAnalysisPrompt(data: any): string {
     return `
-Bạn là một chuyên gia phân tích giao dịch Bitcoin. Dựa trên dữ liệu thị trường sau, hãy đưa ra một tín hiệu giao dịch chính xác.
+Bạn là một chuyên gia phân tích giao dịch Bitcoin với 15 năm kinh nghiệm. Hãy phân tích dữ liệu thị trường sau và đưa ra dự đoán chính xác:
 
 THÔNG TIN THỊ TRƯỜNG:
 - Giá hiện tại: $${data.currentPrice.toFixed(2)}
@@ -91,18 +91,23 @@ CHỈ SỐ KỸ THUẬT:
 - EMA12: $${data.indicators.ema12.toFixed(2)}
 - EMA26: $${data.indicators.ema26.toFixed(2)}
 
-TÍN HIỆU HIỆN TẠI TỪ PHÂN TÍCH KỸ THUẬT:
+TÍN HIỆU HIỆN TẠI:
 - Hành động: ${data.currentSignal.action}
 - Độ tin cậy: ${data.currentSignal.confidence}%
 - Xác suất thắng: ${data.currentSignal.probability}%
 - Độ mạnh: ${data.currentSignal.strength}
 
-GIÁ GẦN ĐÂY (5 tick cuối): ${data.recentPrices.slice(-5).map((p: number) => p.toFixed(2)).join(', ')}
+GIÁ GẦN ĐÂY (20 tick): ${data.recentPrices.slice(-5).map((p: number) => p.toFixed(2)).join(', ')}
 
-YÊU CẦU PHẢN HỒI (CHỈ JSON):
-Hãy cung cấp một đối tượng JSON chứa các trường sau để cập nhật tín hiệu giao dịch. KHÔNG bao gồm bất kỳ giải thích dài dòng hay phân tích thị trường tổng thể nào khác.
+YÊU CẦU PHÂN TÍCH:
+1. Đánh giá tổng thể thị trường (BULLISH/BEARISH/SIDEWAYS)
+2. Xác định hành động tối ưu (BUY/SELL/HOLD)
+3. Tính toán độ tin cậy chính xác (0-100%)
+4. Dự đoán xác suất thắng (0-100%)
+5. Đánh giá độ mạnh tín hiệu (WEAK/MODERATE/STRONG/VERY_STRONG)
+6. Đề xuất giá vào lệnh, stop loss, take profit
 
-ĐỊNH DẠNG PHẢN HỒI JSON:
+ĐỊNH DẠNG PHẢN HỒI (JSON):
 {
   "action": "BUY|SELL|HOLD",
   "confidence": số_từ_0_đến_100,
@@ -111,9 +116,13 @@ Hãy cung cấp một đối tượng JSON chứa các trường sau để cập
   "entry_price": giá_vào_lệnh,
   "stop_loss": giá_cắt_lỗ,
   "take_profit": giá_chốt_lời,
-  "reason": "Một lý do ngắn gọn (tối đa 10 từ)"
+  "market_outlook": "BULLISH|BEARISH|SIDEWAYS",
+  "risk_level": "LOW|MEDIUM|HIGH",
+  "time_horizon": "SHORT|MEDIUM|LONG"
 }
-    `.trim();
+
+Hãy phân tích kỹ lưỡng và đưa ra dự đoán chính xác nhất có thể!
+    `;
   }
 
   private parseAIResponse(aiResponse: string, fallbackSignal: TradingSignal, currentPrice: number): TradingSignal {
@@ -130,7 +139,6 @@ Hãy cung cấp một đối tượng JSON chứa các trường sau để cập
         action: aiAnalysis.action || fallbackSignal.action,
         confidence: Math.min(Math.max(aiAnalysis.confidence || fallbackSignal.confidence, 0), 100),
         timestamp: Date.now(),
-        reason: aiAnalysis.reason ? `🤖 AI: ${aiAnalysis.reason}` : fallbackSignal.reason,
         probability: Math.min(Math.max(aiAnalysis.probability || fallbackSignal.probability, 0), 100),
         strength: aiAnalysis.strength || fallbackSignal.strength,
         entry_price: aiAnalysis.entry_price || currentPrice,
@@ -142,7 +150,6 @@ Hãy cung cấp một đối tượng JSON chứa các trường sau để cập
       // Return enhanced fallback signal
       return {
         ...fallbackSignal,
-        reason: `🤖 AI Analysis Error, using technical analysis: ${fallbackSignal.reason}`,
         confidence: Math.min(fallbackSignal.confidence + 5, 95), // Slight boost for attempting AI
       };
     }
