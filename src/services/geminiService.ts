@@ -89,7 +89,7 @@ CHỈ SỐ KỸ THUẬT:
 - SMA20: $${data.indicators.sma20.toFixed(2)}
 - SMA50: $${data.indicators.sma50.toFixed(2)}
 - EMA12: $${data.indicators.ema12.toFixed(2)}
-- EMA26: $${data.indicators.ema26.toFixed(2)}
+- EMA26: $${data.ema26.toFixed(2)}
 
 TÍN HIỆU HIỆN TẠI:
 - Hành động: ${data.currentSignal.action}
@@ -105,7 +105,7 @@ YÊU CẦU PHÂN TÍCH:
 3. Tính toán độ tin cậy chính xác (0-100%)
 4. Dự đoán xác suất thắng (0-100%)
 5. Đánh giá độ mạnh tín hiệu (WEAK/MODERATE/STRONG/VERY_STRONG)
-6. Giải thích lý do chi tiết
+6. Giải thích lý do ngắn gọn và súc tích
 7. Đề xuất giá vào lệnh, stop loss, take profit
 
 ĐỊNH DẠNG PHẢN HỒI (JSON):
@@ -114,7 +114,7 @@ YÊU CẦU PHÂN TÍCH:
   "confidence": số_từ_0_đến_100,
   "probability": số_từ_0_đến_100,
   "strength": "WEAK|MODERATE|STRONG|VERY_STRONG",
-  "reason": "Giải thích chi tiết bằng tiếng Việt",
+  "reason": "Tóm tắt lý do bằng tiếng Việt", // Changed from "Giải thích chi tiết"
   "entry_price": giá_vào_lệnh,
   "stop_loss": giá_cắt_lỗ,
   "take_profit": giá_chốt_lời,
