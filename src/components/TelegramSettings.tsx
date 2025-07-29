@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TelegramConfig } from '../types/trading';
 import { Send, Settings, Eye, EyeOff } from 'lucide-react';
 
@@ -14,16 +14,34 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
   onTestMessage
 }) => {
   const [showToken, setShowToken] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true); // Changed to true to expand by default
+  const [isExpanded, setIsExpanded] = useState(true); // Default to expanded
 
-  // Ensure the initial config passed from the parent component has enabled: true
-  // If config.enabled is explicitly false, it will override this, so ensure your
-  // parent component provides { enabled: true, ...otherConfig } initially.
-  React.useEffect(() => {
-    if (config.enabled === undefined) { // Check if enabled is not explicitly set
-      onConfigChange({ ...config, enabled: true });
+  // Use useEffect to ensure 'enabled' is true and to set default botToken and chatId if not already present
+  useEffect(() => {
+    let updatedConfig: TelegramConfig = { ...config };
+    let changed = false;
+
+    if (updatedConfig.enabled === undefined || updatedConfig.enabled === false) {
+      updatedConfig.enabled = true;
+      changed = true;
     }
-  }, [config.enabled]); // Only re-run if config.enabled changes
+
+    // Set default botToken if not already set or is empty
+    if (!updatedConfig.botToken || updatedConfig.botToken === 'YOUR_BOT_TOKEN_HERE') {
+      updatedConfig.botToken = '7578707048:AAG5Vr667I-3LerfhO1YzYbgTinXJwuHmAA';
+      changed = true;
+    }
+
+    // Set default chatId if not already set or is empty
+    if (!updatedConfig.chatId || updatedConfig.chatId === 'YOUR_CHAT_ID_HERE') {
+      updatedConfig.chatId = '-1002577959257';
+      changed = true;
+    }
+
+    if (changed) {
+      onConfigChange(updatedConfig);
+    }
+  }, [config, onConfigChange]); // Dependencies for useEffect
 
   const handleInputChange = (field: keyof TelegramConfig, value: string | boolean) => {
     onConfigChange({
@@ -56,7 +74,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
             <input
               type="checkbox"
               id="telegram-enabled"
-              checked={config.enabled} // This will now be true by default if the parent passes it as such
+              checked={config.enabled}
               onChange={(e) => handleInputChange('enabled', e.target.checked)}
               className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
             />
@@ -74,7 +92,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
                 <div className="relative">
                   <input
                     type={showToken ? 'text' : 'password'}
-                    value={config.botToken}
+                    value={config.botToken || ''} {/* Ensure value is never undefined */}
                     onChange={(e) => handleInputChange('botToken', e.target.value)}
                     placeholder="Enter your Telegram bot token"
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -95,7 +113,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={config.chatId}
+                  value={config.chatId || ''} {/* Ensure value is never undefined */}
                   onChange={(e) => handleInputChange('chatId', e.target.value)}
                   placeholder="Enter your chat ID or group ID"
                   className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
