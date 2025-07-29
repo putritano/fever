@@ -206,9 +206,7 @@ function App() {
             <div>
               <h3 className="text-yellow-400 font-semibold mb-2">Risk Warning</h3>
               <p className="text-yellow-100 text-sm leading-relaxed">
-                Trading với đòn bẩy cao (1:2000) có thể dẫn đến mất mát nhanh chóng. Hệ thống này phân tích tick hiện tại 
-                để đưa ra khuyến nghị BUY/SELL ngay lập tức. Các tín hiệu chỉ mang tính chất tham khảo và không phải lời khuyên đầu tư. 
-                Luôn sử dụng stop-loss và chỉ giao dịch với số tiền bạn có thể chấp nhận mất. Thị trường crypto có tính biến động cao và khó dự đoán.
+                Đừng tham lam. Lương của mày chỉ được 500 cành / ngày hôm nay thôi.
               </p>
             </div>
           </div>
