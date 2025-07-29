@@ -1,11 +1,11 @@
 // Trong components/PriceChart.tsx (ví dụ)
 import React, { useRef, useEffect } from 'react';
 import { createChart, IChartApi, ISeriesApi, CandlestickData, BarPrices } from 'lightweight-charts';
-import { ProcessedCandle, TradingSignal } from '../types/trading'; // Import TradingSignal
+import { ProcessedCandle, TradingSignal } from '../types/trading';
 
 interface PriceChartProps {
   candles: ProcessedCandle[];
-  signals?: TradingSignal[]; // Thêm prop signals
+  signals?: TradingSignal[];
   width: number;
   height: number;
 }
@@ -39,11 +39,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({ candles, signals = [], w
       },
     });
 
+    // THÊM DÒNG NÀY ĐỂ DEBUG
+    console.log("Chart object after createChart:", chart);
+
     chartRef.current = chart;
 
-    const candlestickSeries = chart.addCandlestickSeries({
-      upColor: '#10b981',   // green
-      downColor: '#ef4444', // red
+    const candlestickSeries = chart.addCandlestickSeries({ // Dòng gây lỗi
+      upColor: '#10b981',
+      downColor: '#ef4444',
       borderDownColor: '#ef4444',
       borderUpColor: '#10b981',
       wickDownColor: '#ef4444',
@@ -51,9 +54,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({ candles, signals = [], w
     });
     candlestickSeriesRef.current = candlestickSeries;
 
-    // Map your candle data to the format required by lightweight-charts
     const chartData: CandlestickData[] = candles.map(c => ({
-      time: c.timestamp / 1000 as CandlestickData['time'], // Unix timestamp in seconds
+      time: c.timestamp / 1000 as CandlestickData['time'],
       open: c.open,
       high: c.high,
       low: c.low,
@@ -62,28 +64,25 @@ export const PriceChart: React.FC<PriceChartProps> = ({ candles, signals = [], w
 
     candlestickSeries.setData(chartData);
 
-    // Add markers for signals
     const markers = signals
-      .filter(signal => signal.action !== 'HOLD') // Only show BUY/SELL signals
+      .filter(signal => signal.action !== 'HOLD')
       .map(signal => {
-        // Find the corresponding candle to place the marker
-        const candleForSignal = candles.find(c => Math.abs(c.timestamp - signal.timestamp) < 5000); // within 5 seconds
+        const candleForSignal = candles.find(c => Math.abs(c.timestamp - signal.timestamp) < 5000);
         if (!candleForSignal) return null;
 
         return {
           time: signal.timestamp / 1000 as CandlestickData['time'],
           position: signal.action === 'BUY' ? 'belowBar' : 'aboveBar',
-          color: signal.action === 'BUY' ? '#22c55e' : '#ef4444', // green for buy, red for sell
+          color: signal.action === 'BUY' ? '#22c55e' : '#ef4444',
           shape: signal.action === 'BUY' ? 'arrowUp' : 'arrowDown',
           text: `${signal.action} @ ${signal.entry_price.toFixed(2)}`,
         };
       })
-      .filter(Boolean); // Remove null entries
+      .filter(Boolean);
 
     if (markers.length > 0) {
-      candlestickSeries.setMarkers(markers as any[]); // Type assertion might be needed depending on lightweight-charts version
+      candlestickSeries.setMarkers(markers as any[]);
     }
-
 
     chart.timeScale().fitContent();
 
@@ -100,7 +99,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({ candles, signals = [], w
         chartRef.current = null;
       }
     };
-  }, [candles, signals, width, height]); // Thêm signals vào dependency array
+  }, [candles, signals, width, height]);
 
   return <div ref={chartContainerRef} style={{ width: '100%', height: `${height}px` }} />;
 };
