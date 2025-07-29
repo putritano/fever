@@ -284,7 +284,6 @@ export class TechnicalAnalyzer {
       action,
       confidence: Math.round(confidence),
       timestamp: Date.now(),
-      reason: reasons.join(', '),
       probability: Math.round(probability),
       strength,
       entry_price: currentPrice,
