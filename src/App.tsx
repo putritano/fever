@@ -247,7 +247,7 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
-            <PriceChart candles={candles.slice(-100)} width={800} height={400} />
+            <PriceChart candles={candles.slice(-100)} width={800} height={400} signals={displayAnalysis.signals} />
           </div>
 
           {/* Right Column - Market Overview */}
