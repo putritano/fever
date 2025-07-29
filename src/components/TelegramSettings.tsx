@@ -34,7 +34,7 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
 
     // Set default chatId if not already set or is empty
     if (!updatedConfig.chatId || updatedConfig.chatId === 'YOUR_CHAT_ID_HERE') {
-      updatedConfig.chatId = '-YOUR_BOT_TOKEN_HERE';
+      updatedConfig.chatId = '--1002577959257';
       changed = true;
     }
 
