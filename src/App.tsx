@@ -109,7 +109,6 @@ function App() {
       action: 'BUY',
       confidence: 85,
       timestamp: Date.now(),
-      reason: 'Test message from Bitcoin Trading Analyzer',
       probability: 75,
       strength: 'STRONG',
       entry_price: candles.length > 0 ? candles[candles.length - 1].close : 50000,
