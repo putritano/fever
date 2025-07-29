@@ -37,6 +37,7 @@ export interface TradingSignal {
   action: 'BUY' | 'SELL' | 'HOLD';
   confidence: number;
   timestamp: number;
+  reason: string;
   probability: number;
   strength: 'WEAK' | 'MODERATE' | 'STRONG' | 'VERY_STRONG';
   entry_price: number;
