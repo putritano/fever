@@ -105,7 +105,8 @@ YÊU CẦU PHÂN TÍCH:
 3. Tính toán độ tin cậy chính xác (0-100%)
 4. Dự đoán xác suất thắng (0-100%)
 5. Đánh giá độ mạnh tín hiệu (WEAK/MODERATE/STRONG/VERY_STRONG)
-6. Đề xuất giá vào lệnh, stop loss, take profit
+6. Giải thích lý do chi tiết
+7. Đề xuất giá vào lệnh, stop loss, take profit
 
 ĐỊNH DẠNG PHẢN HỒI (JSON):
 {
@@ -113,6 +114,7 @@ YÊU CẦU PHÂN TÍCH:
   "confidence": số_từ_0_đến_100,
   "probability": số_từ_0_đến_100,
   "strength": "WEAK|MODERATE|STRONG|VERY_STRONG",
+  "reason": "Giải thích chi tiết bằng tiếng Việt",
   "entry_price": giá_vào_lệnh,
   "stop_loss": giá_cắt_lỗ,
   "take_profit": giá_chốt_lời,
@@ -139,6 +141,7 @@ Hãy phân tích kỹ lưỡng và đưa ra dự đoán chính xác nhất có t
         action: aiAnalysis.action || fallbackSignal.action,
         confidence: Math.min(Math.max(aiAnalysis.confidence || fallbackSignal.confidence, 0), 100),
         timestamp: Date.now(),
+        reason: `🤖 AI Enhanced: ${aiAnalysis.reason || fallbackSignal.reason}`,
         probability: Math.min(Math.max(aiAnalysis.probability || fallbackSignal.probability, 0), 100),
         strength: aiAnalysis.strength || fallbackSignal.strength,
         entry_price: aiAnalysis.entry_price || currentPrice,
@@ -150,6 +153,7 @@ Hãy phân tích kỹ lưỡng và đưa ra dự đoán chính xác nhất có t
       // Return enhanced fallback signal
       return {
         ...fallbackSignal,
+        reason: `🤖 AI Analysis: ${fallbackSignal.reason} (AI processing error, using technical analysis)`,
         confidence: Math.min(fallbackSignal.confidence + 5, 95), // Slight boost for attempting AI
       };
     }
