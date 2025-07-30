@@ -29,19 +29,9 @@ function App() {
   // Enhanced analysis with AI
 const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
 const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
-  
-  // Thêm state mới để theo dõi xung đột
-  const [analysisConflict, setAnalysisConflict] = useState<
-    { ta: string; ai: string } | false
-  >(false);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [lastAiCall, setLastAiCall] = useState<number>(0);
-useMemo(() => {
-  if (candles.length === 0) return null;
-  const analysisResult = TechnicalAnalyzer.analyzeMarket(candles);
-  setBaseAnalysis(analysisResult); // Set kết quả phân tích cơ bản ở đây
-}, [candles]);
-  
+
   // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
     if (!analysis || candles.length === 0) return;
