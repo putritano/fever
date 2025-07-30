@@ -229,7 +229,8 @@ export class TechnicalAnalyzer {
   ): TradingSignal {
     let score = 0;
     let reasons: string[] = [];
-    
+    const currentPrice = candle.close;
+    const previousClose = candle.open;
     // Historical pattern analysis for win rate prediction
     const historicalAccuracy = this.calculateHistoricalAccuracy(candles, indicators);
     
