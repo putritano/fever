@@ -14,7 +14,10 @@ export class TechnicalAnalyzer {
     if (data.length < period) return 0;
     
     const multiplier = 2 / (period + 1);
-    let ema = data.slice(0, period).reduce((a, b) => a + b, 0) / period;
+    
+    // Use SMA for initial EMA value
+    let ema = this.calculateSMA(data.slice(0, period), period);
+    if (ema === 0) return 0;
     
     for (let i = period; i < data.length; i++) {
       ema = (data[i] * multiplier) + (ema * (1 - multiplier));
@@ -26,20 +29,43 @@ export class TechnicalAnalyzer {
   static calculateRSI(closes: number[], period: number = 14): number {
     if (closes.length < period + 1) return 50;
     
-    let gains = 0;
-    let losses = 0;
+    // Calculate initial average gain and loss
+    let gains: number[] = [];
+    let losses: number[] = [];
     
-    for (let i = closes.length - period; i < closes.length; i++) {
-      const change = closes[i] - closes[i - 1];
+    // Get price changes for the period
+    for (let i = 1; i <= period; i++) {
+      const index = closes.length - period - 1 + i;
+      if (index < 1) continue;
+      
+      const change = closes[index] - closes[index - 1];
       if (change > 0) {
-        gains += change;
+        gains.push(change);
+        losses.push(0);
       } else {
-        losses += Math.abs(change);
+        gains.push(0);
+        losses.push(Math.abs(change));
       }
     }
     
-    const avgGain = gains / period;
-    const avgLoss = losses / period;
+    if (gains.length === 0) return 50;
+    
+    // Calculate average gain and loss using Wilder's smoothing
+    let avgGain = gains.reduce((sum, gain) => sum + gain, 0) / period;
+    let avgLoss = losses.reduce((sum, loss) => sum + loss, 0) / period;
+    
+    // Apply Wilder's smoothing for remaining periods
+    for (let i = closes.length - period; i < closes.length; i++) {
+      if (i < 1) continue;
+      const change = closes[i] - closes[i - 1];
+      if (change > 0) {
+        avgGain = (avgGain * (period - 1) + change) / period;
+        avgLoss = (avgLoss * (period - 1)) / period;
+      } else {
+        avgGain = (avgGain * (period - 1)) / period;
+        avgLoss = (avgLoss * (period - 1) + Math.abs(change)) / period;
+      }
+    }
     
     if (avgLoss === 0) return 100;
     
@@ -48,12 +74,23 @@ export class TechnicalAnalyzer {
   }
 
   static calculateMACD(closes: number[]): { macd: number; signal: number; histogram: number } {
+    if (closes.length < 26) return { macd: 0, signal: 0, histogram: 0 };
+    
     const ema12 = this.calculateEMA(closes, 12);
     const ema26 = this.calculateEMA(closes, 26);
     const macd = ema12 - ema26;
     
-    // Simplified signal line calculation
-    const signal = this.calculateEMA([macd], 9);
+    // Calculate MACD line for recent periods to get signal line
+    const macdLine: number[] = [];
+    for (let i = 26; i <= closes.length; i++) {
+      const slice = closes.slice(0, i);
+      const ema12_i = this.calculateEMA(slice, 12);
+      const ema26_i = this.calculateEMA(slice, 26);
+      macdLine.push(ema12_i - ema26_i);
+    }
+    
+    // Calculate 9-period EMA of MACD line for signal
+    const signal = macdLine.length >= 9 ? this.calculateEMA(macdLine, 9) : macd;
     const histogram = macd - signal;
     
     return { macd, signal, histogram };
@@ -65,7 +102,7 @@ export class TechnicalAnalyzer {
     
     return {
       sma20: this.calculateSMA(closes, 20),
-      sma50: this.calculateSMA(closes, 50),
+      sma50: this.calculateSMA(closes, 50), // Keep for compatibility
       ema12: this.calculateEMA(closes, 12),
       ema26: this.calculateEMA(closes, 26),
       rsi: this.calculateRSI(closes),
@@ -76,6 +113,26 @@ export class TechnicalAnalyzer {
   }
 
   static analyzeMarket(candles: ProcessedCandle[]): MarketAnalysis {
+    if (candles.length < 50) {
+      // Not enough data for proper analysis
+      return {
+        trend: 'SIDEWAYS',
+        momentum: 'NEUTRAL',
+        volatility: 'MEDIUM',
+        signals: [{
+          action: 'HOLD',
+          confidence: 25,
+          timestamp: Date.now(),
+          reason: 'Insufficient data for analysis',
+          probability: 50,
+          strength: 'WEAK',
+          entry_price: candles[candles.length - 1].close,
+          stop_loss: candles[candles.length - 1].close,
+          take_profit: candles[candles.length - 1].close
+        }]
+      };
+    }
+    
     const indicators = this.getTechnicalIndicators(candles);
     const currentPrice = candles[candles.length - 1].close;
     const previousPrice = candles[candles.length - 2].close;
@@ -83,23 +140,25 @@ export class TechnicalAnalyzer {
     
     // Determine trend
     let trend: 'BULLISH' | 'BEARISH' | 'SIDEWAYS' = 'SIDEWAYS';
-    if (currentPrice > indicators.sma20 && indicators.sma20 > indicators.sma50) {
+    const sma50 = this.calculateSMA(candles.map(c => c.close), 50);
+    
+    if (currentPrice > indicators.sma20 && indicators.sma20 > sma50 && indicators.ema12 > indicators.ema26) {
       trend = 'BULLISH';
-    } else if (currentPrice < indicators.sma20 && indicators.sma20 < indicators.sma50) {
+    } else if (currentPrice < indicators.sma20 && indicators.sma20 < sma50 && indicators.ema12 < indicators.ema26) {
       trend = 'BEARISH';
     }
     
     // Determine momentum
     let momentum: 'STRONG' | 'WEAK' | 'NEUTRAL' = 'NEUTRAL';
-    if (Math.abs(priceChange) > 0.1) {
-      momentum = indicators.rsi > 70 || indicators.rsi < 30 ? 'STRONG' : 'WEAK';
+    if (Math.abs(priceChange) > 0.05) { // Lower threshold for forex
+      momentum = (indicators.rsi > 65 || indicators.rsi < 35) && Math.abs(indicators.macdHistogram) > 0.0001 ? 'STRONG' : 'WEAK';
     }
     
     // Determine volatility
     const volatility = this.calculateVolatility(candles);
     let volatilityLevel: 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
-    if (volatility > 0.5) volatilityLevel = 'HIGH';
-    else if (volatility < 0.2) volatilityLevel = 'LOW';
+    if (volatility > 0.3) volatilityLevel = 'HIGH'; // Lower threshold for forex
+    else if (volatility < 0.1) volatilityLevel = 'LOW';
     
     // Generate trading signals
     const signals = this.generateTradingSignals(candles, indicators, trend, momentum);
@@ -190,7 +249,7 @@ export class TechnicalAnalyzer {
     }
     
     // MACD Analysis
-    if (indicators.macdHistogram > 0) {
+    if (indicators.macdHistogram > 0.0001) { // Adjusted threshold for forex
       if (indicators.macd > indicators.macdSignal) {
         score += 2;
         reasons.push('MACD bullish crossover');
@@ -198,7 +257,7 @@ export class TechnicalAnalyzer {
         score += 1;
         reasons.push('MACD histogram positive');
       }
-    } else if (indicators.macdHistogram < 0) {
+    } else if (indicators.macdHistogram < -0.0001) {
       if (indicators.macd < indicators.macdSignal) {
         score -= 2;
         reasons.push('MACD bearish crossover');
@@ -237,7 +296,7 @@ export class TechnicalAnalyzer {
     // Volume analysis
     const currentVolume = candles[candles.length - 1].volume;
     const avgVolume = candles.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20;
-    if (currentVolume > avgVolume * 1.5) {
+    if (currentVolume > avgVolume * 1.3) { // Lower threshold for forex
       score += Math.sign(score) * 1; // Amplify existing signal
       reasons.push('High volume confirmation');
     }
@@ -279,8 +338,8 @@ export class TechnicalAnalyzer {
     
     // Calculate stop loss and take profit
     const atr = this.calculateATR(candles.slice(-14));
-    const stopLoss = action === 'BUY' ? currentPrice - (atr * 1.5) : currentPrice + (atr * 1.5);
-    const takeProfit = action === 'BUY' ? currentPrice + (atr * 2.5) : currentPrice - (atr * 2.5);
+    const stopLoss = action === 'BUY' ? currentPrice - (atr * 2.0) : currentPrice + (atr * 2.0);
+    const takeProfit = action === 'BUY' ? currentPrice + (atr * 3.0) : currentPrice - (atr * 3.0);
     
     return {
       action,
