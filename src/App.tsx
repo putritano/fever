@@ -160,7 +160,7 @@ function App() {
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
       currentSignal.probability >= 75 && // Added probability check as in the original problem description
-      timeSinceLastSignal > 6000; // 1 minutes cooldown
+      timeSinceLastSignal > 1000; // 1 minutes cooldown
 
     if (shouldSend) {
       const currentPrice = candles[candles.length - 1].close;
