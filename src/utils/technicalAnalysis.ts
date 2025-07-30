@@ -408,12 +408,12 @@ export class TechnicalAnalyzer {
         let probability = 50;
         let strength: 'WEAK' | 'MODERATE' | 'STRONG' | 'VERY_STRONG' = 'WEAK';
 
-        if (score >= 4) { // MODERATE BUY
+        if (score >= 5) { // MODERATE BUY
             action = 'BUY';
-            if (score >= 10) { // VERY_STRONG BUY (từ 12 xuống 10)
+            if (score >= 12) { // VERY_STRONG BUY (từ 12 xuống 10)
                 strength = 'VERY_STRONG';
                 probability = 90;
-            } else if (score >= 7) { // STRONG BUY (từ 8 xuống 7)
+            } else if (score >= 8) { // STRONG BUY (từ 8 xuống 7)
                 strength = 'STRONG';
                 probability = 80;
             } else {
