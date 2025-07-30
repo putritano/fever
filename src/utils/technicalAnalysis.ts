@@ -284,7 +284,7 @@ export class TechnicalAnalyzer {
         // Điều chỉnh các ngưỡng điểm số để tín hiệu nhạy hơn
         if (score >= 5) {
             action = 'BUY';
-            if (score >= 10) { // Tăng ngưỡng STRONG từ 8 lên 10
+            if (score >= 8) { // Tăng ngưỡng STRONG từ 8 lên 10
                 strength = 'VERY_STRONG';
                 probability = 90;
                 reason = 'Very Strong Buy Signal based on multiple confirming indicators and strong momentum.';
