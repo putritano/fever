@@ -12,8 +12,8 @@ export class TelegramService {
       return false;
     }
 
-    // Only send alerts for strong signals
-    if (signal.strength !== 'STRONG' && signal.strength !== 'VERY_STRONG') {
+    // Only send alerts for strong signals with high win probability
+    if ((signal.strength !== 'STRONG' && signal.strength !== 'VERY_STRONG') || signal.probability < 75) {
       return false;
     }
 
@@ -41,13 +41,13 @@ export class TelegramService {
 
   private formatTradingMessage(signal: TradingSignal, currentPrice: number): string {
     const emoji = signal.action === 'BUY' ? '🟢' : '🔴';
-    const strengthEmoji = signal.strength === 'VERY_STRONG' ? '🚀' : '⚡';
+    const strengthEmoji = '🚀'; // Combined strong signal emoji
     
     return `
 ${emoji} <b>BITCOIN TRADING SIGNAL</b> ${strengthEmoji}
 
 <b>Action:</b> ${signal.action}
-<b>Strength:</b> ${signal.strength}
+<b>Strength:</b> STRONG
 <b>Confidence:</b> ${signal.confidence}%
 <b>Win Probability:</b> ${signal.probability}%
 

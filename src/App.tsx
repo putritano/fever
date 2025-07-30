@@ -132,9 +132,10 @@ function App() {
     const currentSignal = enhancedAnalysis.signals[0];
     if (!currentSignal) return;
     
-    // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
+    // Only send if it's a strong signal with high probability and we haven't sent one recently
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
+                      currentSignal.probability >= 75 &&
                       timeSinceLastSignal > 300000; // 5 minutes cooldown
     
     if (shouldSend) {
