@@ -27,8 +27,8 @@ function App() {
   }, [candles]);
 
   // Enhanced analysis with AI
-  const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
-  const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
+const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
+const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
   
   // Thêm state mới để theo dõi xung đột
   const [analysisConflict, setAnalysisConflict] = useState<
