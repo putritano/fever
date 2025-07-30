@@ -166,7 +166,7 @@ Hãy phân tích kỹ lưỡng và đưa ra dự đoán chính xác nhất có t
 Phân tích tâm lý thị trường Forex hiện tại, tập trung vào cặp EUR/USD dựa trên:
 - Tin tức kinh tế vĩ mô gần đây (lãi suất, lạm phát, việc làm của Mỹ và EU)
 - Xu hướng của chỉ số DXY (US Dollar Index)
-- Các sự kiện chính trị ảnh hưởng đến EU và Mỹ
+- Các sự kiện chính trị ảnh hưởng đến EUR, USDT
 
 Trả về một trong các giá trị: EXTREMELY_BULLISH, BULLISH, NEUTRAL, BEARISH, EXTREMELY_BEARISH
 Kèm theo giải thích ngắn gọn bằng tiếng Việt.
