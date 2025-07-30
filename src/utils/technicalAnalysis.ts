@@ -234,22 +234,22 @@ export class TechnicalAnalyzer {
     const historicalAccuracy = this.calculateHistoricalAccuracy(candles, indicators);
     
     // RSI Analysis
-    if (indicators.rsi < 30) {
+    if (indicators.rsi < 35) {
       score += 3;
       reasons.push('RSI oversold (strong buy signal)');
-    } else if (indicators.rsi > 70) {
+    } else if (indicators.rsi > 65) {
       score -= 3;
       reasons.push('RSI overbought (strong sell signal)');
-    } else if (indicators.rsi < 40) {
+    } else if (indicators.rsi < 45) {
       score += 1;
       reasons.push('RSI approaching oversold');
-    } else if (indicators.rsi > 60) {
+    } else if (indicators.rsi > 55) {
       score -= 1;
       reasons.push('RSI approaching overbought');
     }
     
     // MACD Analysis
-    if (indicators.macdHistogram > 0.0001) { // Adjusted threshold for forex
+    if (indicators.macdHistogram > 0.00001) { // Adjusted threshold for forex
       if (indicators.macd > indicators.macdSignal) {
         score += 2;
         reasons.push('MACD bullish crossover');
