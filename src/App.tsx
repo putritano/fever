@@ -217,7 +217,7 @@ function App() {
               {aiProcessing && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-blue-400">🤖 AI Confirming Signal...</span>
+                  <span className="text-xs text-blue-400">🤖 AI Đang phân tích...</span>
                 </div>
               )}
               {enhancedAnalysis && !aiProcessing && (
