@@ -221,18 +221,18 @@ function App() {
                 </div>
               )}
               {/* *** HIỂN THỊ CẢNH BÁO XUNG ĐỘT *** */}
-                {!aiProcessing && analysisConflict && (
-                  <div className="flex items-center space-x-2 bg-yellow-900/50 border border-yellow-700 px-2 py-1 rounded">
-                    <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                    <span className="text-xs text-yellow-300 font-semibold">
-                      Xung đột: TA đề xuất {analysisConflict.ta} nhưng AI quyết định {analysisConflict.ai}
-                    </span>
-                  </div>
-                )}
-              {enhancedAnalysis && !aiProcessing && (
+              {!aiProcessing && analysisConflict && (
+                <div className="flex items-center space-x-2 bg-yellow-900/50 border border-yellow-700 px-2 py-1 rounded">
+                  <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                  <span className="text-xs text-yellow-300 font-semibold">
+                    Xung đột: TA đề xuất {analysisConflict.ta} nhưng AI quyết định {analysisConflict.ai}
+                  </span>
+                </div>
+              )}
+                {!aiProcessing && enhancedAnalysis && !analysisConflict && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-xs text-green-400">🤖 AI Confirmed</span>
+                  <span className="text-xs text-green-400">✅ AI đã xác nhận</span>
                 </div>
               )}
               {enhancedAnalysis && !enhancedAnalysis.signals[0]?.reason.includes('🤖') && (
