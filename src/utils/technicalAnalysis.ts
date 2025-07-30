@@ -303,7 +303,7 @@ export class TechnicalAnalyzer {
                 strength = 'VERY_STRONG';
                 probability = 90;
                 reason = 'Very Strong Sell Signal based on multiple confirming indicators and strong momentum.';
-            } else if (score <= -7) { // Giảm ngưỡng VERY_STRONG từ -12 xuống -7
+            } else if (score <= -12) { // Giảm ngưỡng VERY_STRONG từ -12 xuống -7
                 strength = 'STRONG';
                 probability = 80;
                 reason = 'Strong Sell Signal with confirming technical factors.';
