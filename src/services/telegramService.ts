@@ -58,7 +58,7 @@ ${emoji} <b>BITCOIN TRADING SIGNAL</b> ${strengthEmoji}
 
 <b>Risk/Reward:</b> ${this.calculateRiskReward(signal)}
 
-⚠️ <i>Đây chỉ là tín hiệu tham khảo. Luôn sử dụng stop-loss và quản lý rủi ro!</i>
+⚠️ <i></i>
 
 <b>Time:</b> ${new Date(signal.timestamp).toLocaleString('vi-VN')}
     `.trim();
