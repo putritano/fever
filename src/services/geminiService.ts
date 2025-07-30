@@ -141,7 +141,7 @@ Hãy phân tích kỹ lưỡng và đưa ra dự đoán chính xác nhất có t
         action: aiAnalysis.action || fallbackSignal.action,
         confidence: Math.min(Math.max(aiAnalysis.confidence || fallbackSignal.confidence, 0), 100),
         timestamp: Date.now(),
-        reason: `🤖 AI Enhanced: ${aiAnalysis.reason || fallbackSignal.reason}`,
+        reason: ``,
         probability: Math.min(Math.max(aiAnalysis.probability || fallbackSignal.probability, 0), 100),
         strength: aiAnalysis.strength || fallbackSignal.strength,
         entry_price: aiAnalysis.entry_price || currentPrice,
