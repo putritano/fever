@@ -12,7 +12,8 @@ export class TechnicalAnalyzer {
         if (candles.length < 26) { // Cần ít nhất 26 nến cho EMA26
             return null;
         }
-
+        
+      const currentPrice = candles[candles.length - 1].close;
         const closes = candles.map(c => c.close);
         const highPrices = candles.map(c => c.high);
         const lowPrices = candles.map(c => c.low);
