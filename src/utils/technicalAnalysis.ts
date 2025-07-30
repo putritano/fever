@@ -121,9 +121,9 @@ export class TechnicalAnalyzer {
         // Đây chỉ là một phương pháp đơn giản. Có thể phức tạp hơn với các khung thời gian lớn hơn.
         let trend: Trend = 'UNDEFINED';
         if (!isNaN(ema12) && !isNaN(ema26) && !isNaN(sma20)) {
-            if (ema12 > ema26 && currentPrice > sma20) {
+            if (ema12 > ema26 && currentPrice > sma20) { // currentPrice đã được định nghĩa ở trên
                 trend = 'BULLISH';
-            } else if (ema12 < ema26 && currentPrice < sma20) {
+            } else if (ema12 < ema26 && currentPrice < sma20) { // currentPrice đã được định nghĩa ở trên
                 trend = 'BEARISH';
             } else {
                 trend = 'SIDEWAYS';
