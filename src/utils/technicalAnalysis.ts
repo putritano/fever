@@ -299,7 +299,7 @@ export class TechnicalAnalyzer {
             }
         } else if (score <= -5) { 
             action = 'SELL';
-            if (score <= -8) { // Giảm ngưỡng STRONG từ -8 xuống -10
+            if (score <= -8) {
                 strength = 'VERY_STRONG';
                 probability = 90;
                 reason = 'Very Strong Sell Signal based on multiple confirming indicators and strong momentum.';
