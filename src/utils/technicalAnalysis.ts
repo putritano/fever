@@ -297,9 +297,9 @@ export class TechnicalAnalyzer {
                 probability = 65;
                 reason = 'Moderate Buy Signal with some confirming indicators.';
             }
-        } else if (score <= -5) { // Giảm ngưỡng từ -5 xuống -4 cho MODERATE SELL
+        } else if (score <= -5) { 
             action = 'SELL';
-            if (score <= -10) { // Giảm ngưỡng STRONG từ -8 xuống -10
+            if (score <= -8) { // Giảm ngưỡng STRONG từ -8 xuống -10
                 strength = 'VERY_STRONG';
                 probability = 90;
                 reason = 'Very Strong Sell Signal based on multiple confirming indicators and strong momentum.';
