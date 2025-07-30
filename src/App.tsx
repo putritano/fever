@@ -197,9 +197,9 @@ function App() {
       <header className="bg-gray-800 border-b border-gray-700 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Bitcoin Trading Analyzer</h1>
+            <h1 className="text-2xl font-bold">Lụm lúa</h1>
             <div className="flex items-center space-x-2">
-              <p className="text-gray-400 text-sm">Real-time Professional Trading Analysis Dashboard</p>
+              <p className="text-gray-400 text-sm">Antco AI</p>
               {aiProcessing && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
