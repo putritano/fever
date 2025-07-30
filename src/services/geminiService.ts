@@ -76,7 +76,7 @@ export class GeminiService {
 Bạn là một chuyên gia phân tích giao dịch Forex EUR/USD với 15 năm kinh nghiệm. Hãy phân tích dữ liệu thị trường sau và đưa ra dự đoán chính xác:
 
 THÔNG TIN THỊ TRƯỜNG:
-- Giá hiện tại: $${data.currentPrice.toFixed(2)}
+- Giá hiện tại: $${data.currentPrice.toFixed(5)}
 - Thay đổi 24h: ${data.priceChange24h.toFixed(2)}%
 - Volume hiện tại: ${data.volume.toFixed(0)}
 - Volume trung bình: ${data.avgVolume.toFixed(0)}
@@ -86,10 +86,10 @@ CHỈ SỐ KỸ THUẬT:
 - RSI: ${data.indicators.rsi.toFixed(1)}
 - MACD: ${data.indicators.macd.toFixed(4)}
 - MACD Signal: ${data.indicators.macdSignal.toFixed(4)}
-- SMA20: $${data.indicators.sma20.toFixed(2)}
-- SMA50: $${data.indicators.sma50.toFixed(2)}
-- EMA12: $${data.indicators.ema12.toFixed(2)}
-- EMA26: $${data.indicators.ema26.toFixed(2)}
+- SMA20: $${data.indicators.sma20.toFixed(5)}
+- SMA50: $${data.indicators.sma50.toFixed(5)}
+- EMA12: $${data.indicators.ema12.toFixed(5)}
+- EMA26: $${data.indicators.ema26.toFixed(5)}
 
 TÍN HIỆU HIỆN TẠI:
 - Hành động: ${data.currentSignal.action}
@@ -98,6 +98,7 @@ TÍN HIỆU HIỆN TẠI:
 - Độ mạnh: ${data.currentSignal.strength}
 
 GIÁ GẦN ĐÂY (20 tick): ${data.recentPrices.slice(-5).map((p: number) => p.toFixed(2)).join(', ')}
+GIÁ GẦN ĐÂY (20 tick): ${data.recentPrices.slice(-5).map((p: number) => p.toFixed(5)).join(', ')}
 
 YÊU CẦU PHÂN TÍCH:
 1. Đánh giá tổng thể thị trường (BULLISH/BEARISH/SIDEWAYS)

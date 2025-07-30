@@ -51,7 +51,7 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-2xl font-bold text-white">
-              ${currentPrice.toFixed(2)}
+              ${currentPrice.toFixed(5)}
             </div>
             <div className="text-sm text-gray-400">EUR/USDT</div>
           </div>
@@ -122,7 +122,7 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
             <div className={`font-semibold ${
               currentPrice > indicators.sma20 ? 'text-green-400' : 'text-red-400'
             }`}>
-              ${indicators.sma20.toFixed(2)}
+              ${indicators.sma20.toFixed(5)}
             </div>
           </div>
           

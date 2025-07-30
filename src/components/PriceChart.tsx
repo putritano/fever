@@ -108,7 +108,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     for (let i = 0; i <= 5; i++) {
       const price = maxPrice - (i / 5) * priceRange;
       const y = margin.top + (i / 5) * chartHeight;
-      ctx.fillText(price.toFixed(2), width - margin.right + 5, y + 4);
+      ctx.fillText(price.toFixed(5), width - margin.right + 5, y + 4);
     }
 
     // Draw current price
@@ -128,7 +128,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ctx.fillStyle = '#F59E0B';
     ctx.font = 'bold 14px system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText(`$${currentPrice.toFixed(2)}`, width - margin.right + 5, currentY + 4);
+    ctx.fillText(`$${currentPrice.toFixed(5)}`, width - margin.right + 5, currentY + 4);
 
   }, [candles, width, height]);
 

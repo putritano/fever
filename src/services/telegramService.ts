@@ -54,6 +54,9 @@ ${emoji} <b>EUR/USD TRADING SIGNAL</b> ${strengthEmoji}
 <b>Entry Price:</b> $${signal.entry_price.toFixed(2)}
 <b>Stop Loss:</b> $${signal.stop_loss.toFixed(2)}
 <b>Take Profit:</b> $${signal.take_profit.toFixed(2)}
+<b>Entry Price:</b> $${signal.entry_price.toFixed(5)}
+<b>Stop Loss:</b> $${signal.stop_loss.toFixed(5)}
+<b>Take Profit:</b> $${signal.take_profit.toFixed(5)}
 
 
 <b>Risk/Reward:</b> ${this.calculateRiskReward(signal)}

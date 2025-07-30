@@ -87,21 +87,21 @@ export const TradingSignals: React.FC<TradingSignalsProps> = ({ signals }) => {
                   <DollarSign className="w-3 h-3 text-green-400" />
                   <div>
                     <div className="text-gray-400">Entry</div>
-                    <div className="font-semibold">${signal.entry_price.toFixed(2)}</div>
+                    <div className="font-semibold">${signal.entry_price.toFixed(5)}</div>
                   </div>
                 </div>
                 <div className="bg-gray-900/50 p-2 rounded flex items-center space-x-1">
                   <Shield className="w-3 h-3 text-red-400" />
                   <div>
                     <div className="text-gray-400">Stop Loss</div>
-                    <div className="font-semibold">${signal.stop_loss.toFixed(2)}</div>
+                    <div className="font-semibold">${signal.stop_loss.toFixed(5)}</div>
                   </div>
                 </div>
                 <div className="bg-gray-900/50 p-2 rounded flex items-center space-x-1">
                   <Target className="w-3 h-3 text-blue-400" />
                   <div>
                     <div className="text-gray-400">Take Profit</div>
-                    <div className="font-semibold">${signal.take_profit.toFixed(2)}</div>
+                    <div className="font-semibold">${signal.take_profit.toFixed(5)}</div>
                   </div>
                 </div>
               </div>
