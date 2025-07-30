@@ -235,10 +235,10 @@ function App() {
                   <span className="text-xs text-green-400">✅ AI đã xác nhận</span>
                 </div>
               )}
-              {enhancedAnalysis && !enhancedAnalysis.signals[0]?.reason.includes('🤖') && (
+                {!aiProcessing && !enhancedAnalysis && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="text-xs text-gray-400">Technical Only</span>
+                  <span className="text-xs text-gray-400">Chỉ dùng Phân tích Kỹ thuật</span>
                 </div>
               )}
             </div>
