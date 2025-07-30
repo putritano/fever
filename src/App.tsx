@@ -34,7 +34,11 @@ function App() {
 
   const [analysisConflict, setAnalysisConflict] = useState<
   { ta: string; ai: string } | false > (false);
-  
+  useMemo(() => {
+  if (candles.length === 0) return null;
+  const analysisResult = TechnicalAnalyzer.analyzeMarket(candles);
+  setBaseAnalysis(analysisResult); // Set kết quả phân tích cơ bản ở đây
+}, [candles]);
   // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
     if (!analysis || candles.length === 0) return;
