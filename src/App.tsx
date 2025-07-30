@@ -21,12 +21,17 @@ function App() {
   const [telegramService] = useState(() => new TelegramService(telegramConfig));
   const [lastSignalSent, setLastSignalSent] = useState<number>(0);
 
-useMemo(() => {
+  const analysis = useMemo(() => {
+    if (candles.length === 0) return null;
+    return TechnicalAnalyzer.analyzeMarket(candles);
+  }, [candles]);
+
+  useMemo(() => {
   if (candles.length === 0) return null;
   const analysisResult = TechnicalAnalyzer.analyzeMarket(candles);
   setBaseAnalysis(analysisResult); // Set kết quả phân tích cơ bản ở đây
 }, [candles]);
-
+  
   // Enhanced analysis with AI
   const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
   const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
