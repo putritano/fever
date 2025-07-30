@@ -249,23 +249,19 @@ export class TechnicalAnalyzer {
     }
     
     // MACD Analysis
-    if (indicators.macdHistogram > 0.00001) { // Adjusted threshold for forex
-      if (indicators.macd > indicators.macdSignal) {
-        score += 2;
-        reasons.push('MACD bullish crossover');
-      } else {
-        score += 1;
-        reasons.push('MACD histogram positive');
-      }
-    } else if (indicators.macdHistogram < -0.0001) {
-      if (indicators.macd < indicators.macdSignal) {
-        score -= 2;
-        reasons.push('MACD bearish crossover');
-      } else {
-        score -= 1;
-        reasons.push('MACD histogram negative');
-      }
-    }
+    const macdThreshold = 0.00001; // Giảm ngưỡng cực nhỏ để bắt các biến động nhỏ
+
+        if (indicators.macdHistogram > macdThreshold && indicators.macd > indicators.macdSignal) {
+            score += 2; // MACD Bullish crossover with positive histogram
+        } else if (indicators.macdHistogram > 0) {
+            score += 1; // MACD Histogram dương
+        }
+
+        if (indicators.macdHistogram < -macdThreshold && indicators.macd < indicators.macdSignal) {
+            score -= 2; // MACD Bearish crossover with negative histogram
+        } else if (indicators.macdHistogram < 0) {
+            score -= 1; // MACD Histogram âm
+        }
     
     // Price vs Moving Averages
     if (currentPrice > indicators.sma20) {
