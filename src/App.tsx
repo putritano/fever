@@ -6,7 +6,7 @@ import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { TelegramService } from './services/telegramService';
-import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading'; // Import MarketAnalysis
+import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading';
 import { RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 
 function App() {
@@ -50,13 +50,16 @@ function App() {
       return;
     }
 
-    // Check if current signal is actionable (BUY or SELL)
+    // --- START MODIFICATION ---
     const currentSignal = baseAnalysis.signals[0];
-    const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+    const isActionableAndStrongSignal = currentSignal &&
+      (currentSignal.action === 'BUY' || currentSignal.action === 'SELL') &&
+      (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG');
 
-    // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
+    // Only call AI if we have an actionable AND STRONG signal and haven't called recently (6 second cooldown)
     const timeSinceLastAI = Date.now() - lastAiCall;
-    const shouldCallAI = isActionableSignal && timeSinceLastAI > 1000; //1s
+    const shouldCallAI = isActionableAndStrongSignal && timeSinceLastAI > 6000; // 6 seconds cooldown
+    // --- END MODIFICATION ---
 
     if (!shouldCallAI) {
       // If AI shouldn't be called, use the basic analysis
@@ -69,7 +72,7 @@ function App() {
       setLastAiCall(Date.now());
 
       try {
-        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation`);
+        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation (Strength: ${currentSignal.strength})`); // Added strength for logging
         const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
         const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
           candles,
@@ -85,8 +88,8 @@ function App() {
         setEnhancedAnalysis(finalAnalysis);
 
         // Logic to detect conflict
-        const taAction = baseAnalysis.signals[0]?.action; // Use optional chaining for safety
-        const aiAction = finalAnalysis.signals[0]?.action; // Use optional chaining for safety
+        const taAction = baseAnalysis.signals[0]?.action;
+        const aiAction = finalAnalysis.signals[0]?.action;
 
         if (taAction && aiAction && taAction !== aiAction) {
           setAnalysisConflict({ ta: taAction, ai: aiAction });
@@ -159,8 +162,8 @@ function App() {
     // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
-      currentSignal.probability >= 75 && // Added probability check as in the original problem description
-      timeSinceLastSignal > 1000; // 1s
+      currentSignal.probability >= 75 &&
+      timeSinceLastSignal > 6000; // 6 seconds cooldown
 
     if (shouldSend) {
       const currentPrice = candles[candles.length - 1].close;
@@ -205,7 +208,6 @@ function App() {
   }
 
   // Use enhanced analysis if available, otherwise fall back to basic analysis
-  // IMPORTANT: Ensure displayAnalysis is not null before rendering components that rely on its properties.
   const displayAnalysis = enhancedAnalysis || baseAnalysis;
 
   // If displayAnalysis or indicators are still null after all checks, show insufficient data message
@@ -251,7 +253,7 @@ function App() {
                   <span className="text-xs text-green-400">✅ AI đã xác nhận</span>
                 </div>
               )}
-              {!aiProcessing && !enhancedAnalysis && baseAnalysis && ( // Only show if baseAnalysis exists but no AI enhancement
+              {!aiProcessing && !enhancedAnalysis && baseAnalysis && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                   <span className="text-xs text-gray-400">Chỉ dùng Phân tích Kỹ thuật</span>
