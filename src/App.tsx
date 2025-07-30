@@ -56,7 +56,7 @@ function App() {
 
     // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
     const timeSinceLastAI = Date.now() - lastAiCall;
-    const shouldCallAI = isActionableSignal && timeSinceLastAI > 6000; //
+    const shouldCallAI = isActionableSignal && timeSinceLastAI > 1000; //
 
     if (!shouldCallAI) {
       // If AI shouldn't be called, use the basic analysis
