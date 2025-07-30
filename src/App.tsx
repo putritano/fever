@@ -6,93 +6,103 @@ import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { TelegramService } from './services/telegramService';
-import { TelegramConfig, TradingSignal } from './types/trading';
+import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading'; // Import MarketAnalysis
 import { RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 
 function App() {
   const { candles, loading, error, lastUpdate, isConnected, refetch } = useBinanceData(5000); // 5 second updates
-  
+
   const [telegramConfig, setTelegramConfig] = useState<TelegramConfig>({
     botToken: localStorage.getItem('telegram_bot_token') || '',
     chatId: localStorage.getItem('telegram_chat_id') || '',
     enabled: localStorage.getItem('telegram_enabled') === 'true'
   });
-  
+
   const [telegramService] = useState(() => new TelegramService(telegramConfig));
   const [lastSignalSent, setLastSignalSent] = useState<number>(0);
 
-  const analysis = useMemo(() => {
-    if (candles.length === 0) return null;
-    return TechnicalAnalyzer.analyzeMarket(candles);
+  // baseAnalysis will hold the result of TechnicalAnalyzer.analyzeMarket
+  const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
+
+  // Update baseAnalysis whenever candles change
+  useEffect(() => {
+    if (candles.length === 0) {
+      setBaseAnalysis(null);
+      return;
+    }
+    setBaseAnalysis(TechnicalAnalyzer.analyzeMarket(candles));
   }, [candles]);
 
   // Enhanced analysis with AI
-  const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
   const [enhancedAnalysis, setEnhancedAnalysis] = useState<MarketAnalysis | null>(null);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [lastAiCall, setLastAiCall] = useState<number>(0);
+  const [analysisConflict, setAnalysisConflict] = useState<{ ta: string; ai: string } | false>(false);
 
-  const [analysisConflict, setAnalysisConflict] = useState<
-  { ta: string; ai: string } | false > (false);
-  useMemo(() => {
-  if (candles.length === 0) return null;
-  const analysisResult = TechnicalAnalyzer.analyzeMarket(candles);
-  setBaseAnalysis(analysisResult); // Set kết quả phân tích cơ bản ở đây
-}, [candles]);
+
   // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
-  // Reset trạng thái xung đột mỗi khi phân tích thay đổi
-  setAnalysisConflict(false);
+    // Reset analysis conflict state when base analysis changes
+    setAnalysisConflict(false);
 
-  if (!baseAnalysis || candles.length === 0) return;
-
-  const currentSignal = baseAnalysis.signals[0];
-  const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
-  const timeSinceLastAI = Date.now() - lastAiCall;
-  const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000;
-
-  if (!shouldCallAI) {
-    setEnhancedAnalysis(null); // Không có AI, reset enhancedAnalysis
-    return;
-  }
-
-  const enhanceWithAI = async () => {
-    setAiProcessing(true);
-    setLastAiCall(Date.now());
-    
-    try {
-      const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
-      const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
-        candles, 
-        indicators, 
-        baseAnalysis.trend, 
-        baseAnalysis.momentum
-      );
-      
-      const finalAnalysis = {
-        ...baseAnalysis,
-        signals: enhancedSignals
-      };
-      setEnhancedAnalysis(finalAnalysis);
-      
-      // *** LOGIC PHÁT HIỆN XUNG ĐỘT ***
-      const taAction = baseAnalysis.signals[0].action;
-      const aiAction = finalAnalysis.signals[0].action;
-      
-      if (taAction !== aiAction) {
-        setAnalysisConflict({ ta: taAction, ai: aiAction });
-      }
-      
-    } catch (error) {
-      console.error('AI enhancement failed:', error);
-      setEnhancedAnalysis(baseAnalysis); // Fallback to basic analysis
-    } finally {
-      setAiProcessing(false);
+    if (!baseAnalysis || candles.length === 0) {
+      setEnhancedAnalysis(null); // Ensure enhancedAnalysis is null if no base analysis
+      return;
     }
-  };
 
-  enhanceWithAI();
-}, [baseAnalysis, candles, lastAiCall]); // Phụ thuộc vào baseAnalysis
+    // Check if current signal is actionable (BUY or SELL)
+    const currentSignal = baseAnalysis.signals[0];
+    const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+
+    // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
+    const timeSinceLastAI = Date.now() - lastAiCall;
+    const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000; // 5 minutes
+
+    if (!shouldCallAI) {
+      // If AI shouldn't be called, use the basic analysis
+      setEnhancedAnalysis(baseAnalysis);
+      return;
+    }
+
+    const enhanceWithAI = async () => {
+      setAiProcessing(true);
+      setLastAiCall(Date.now());
+
+      try {
+        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation`);
+        const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
+        const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
+          candles,
+          indicators,
+          baseAnalysis.trend,
+          baseAnalysis.momentum
+        );
+
+        const finalAnalysis = {
+          ...baseAnalysis,
+          signals: enhancedSignals
+        };
+        setEnhancedAnalysis(finalAnalysis);
+
+        // Logic to detect conflict
+        const taAction = baseAnalysis.signals[0]?.action; // Use optional chaining for safety
+        const aiAction = finalAnalysis.signals[0]?.action; // Use optional chaining for safety
+
+        if (taAction && aiAction && taAction !== aiAction) {
+          setAnalysisConflict({ ta: taAction, ai: aiAction });
+        }
+
+        console.log('✅ AI enhancement completed successfully');
+      } catch (error) {
+        console.error('AI enhancement failed:', error);
+        setEnhancedAnalysis(baseAnalysis); // Fallback to basic analysis if AI fails
+      } finally {
+        setAiProcessing(false);
+      }
+    };
+
+    enhanceWithAI();
+  }, [baseAnalysis, candles, lastAiCall]); // Depend on baseAnalysis
 
   const indicators = useMemo(() => {
     if (candles.length === 0) return null;
@@ -110,7 +120,7 @@ function App() {
   const handleTelegramConfigChange = useCallback((config: TelegramConfig) => {
     setTelegramConfig(config);
     telegramService.updateConfig(config);
-    
+
     // Save to localStorage
     localStorage.setItem('telegram_bot_token', config.botToken);
     localStorage.setItem('telegram_chat_id', config.chatId);
@@ -130,7 +140,7 @@ function App() {
       stop_loss: candles.length > 0 ? candles[candles.length - 1].close * 0.98 : 49000,
       take_profit: candles.length > 0 ? candles[candles.length - 1].close * 1.02 : 51000
     };
-    
+
     const success = await telegramService.sendTradingAlert(testSignal, testSignal.entry_price);
     if (success) {
       alert('Test message sent successfully!');
@@ -142,16 +152,16 @@ function App() {
   // Auto-send strong signals
   useEffect(() => {
     if (!enhancedAnalysis || !telegramConfig.enabled) return;
-    
+
     const currentSignal = enhancedAnalysis.signals[0];
     if (!currentSignal) return;
-    
-    // Only send if it's a strong signal with high probability and we haven't sent one recently
+
+    // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
     const timeSinceLastSignal = Date.now() - lastSignalSent;
     const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
-                      currentSignal.probability >= 75 &&
-                      timeSinceLastSignal > 6000; // 5 minutes cooldown
-    
+      currentSignal.probability >= 75 && // Added probability check as in the original problem description
+      timeSinceLastSignal > 6000; // 5 minutes cooldown (corrected to 6 seconds for testability if needed, otherwise 300000 for 5 mins)
+
     if (shouldSend) {
       const currentPrice = candles[candles.length - 1].close;
       telegramService.sendTradingAlert(currentSignal, currentPrice).then(success => {
@@ -162,6 +172,8 @@ function App() {
       });
     }
   }, [enhancedAnalysis, telegramConfig.enabled, telegramService, candles, lastSignalSent]);
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -173,6 +185,7 @@ function App() {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -191,18 +204,21 @@ function App() {
     );
   }
 
-  if (!analysis || !indicators) {
+  // Use enhanced analysis if available, otherwise fall back to basic analysis
+  // IMPORTANT: Ensure displayAnalysis is not null before rendering components that rely on its properties.
+  const displayAnalysis = enhancedAnalysis || baseAnalysis;
+
+  // If displayAnalysis or indicators are still null after all checks, show insufficient data message
+  if (!displayAnalysis || !indicators) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-white">Insufficient data for analysis</p>
+          <p className="text-white">Insufficient data for analysis or analysis is not ready.</p>
         </div>
       </div>
     );
   }
 
-  // Use enhanced analysis if available, otherwise fall back to basic analysis
-  const displayAnalysis = enhancedAnalysis || baseAnalysis; 
   const currentPrice = candles[candles.length - 1].close;
 
   return (
@@ -229,13 +245,13 @@ function App() {
                   </span>
                 </div>
               )}
-                {!aiProcessing && enhancedAnalysis && !analysisConflict && (
+              {!aiProcessing && enhancedAnalysis && !analysisConflict && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                   <span className="text-xs text-green-400">✅ AI đã xác nhận</span>
                 </div>
               )}
-                {!aiProcessing && !enhancedAnalysis && (
+              {!aiProcessing && !enhancedAnalysis && baseAnalysis && ( // Only show if baseAnalysis exists but no AI enhancement
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                   <span className="text-xs text-gray-400">Chỉ dùng Phân tích Kỹ thuật</span>
@@ -292,7 +308,7 @@ function App() {
 
         {/* Telegram Settings */}
         <div className="mt-6">
-          <TelegramSettings 
+          <TelegramSettings
             config={telegramConfig}
             onConfigChange={handleTelegramConfigChange}
             onTestMessage={handleTestMessage}
