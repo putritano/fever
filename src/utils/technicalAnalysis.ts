@@ -265,21 +265,11 @@ export class TechnicalAnalyzer {
         }
     
     // Price vs Moving Averages
-    if (currentPrice > indicators.sma20) {
-      score += 2;
-      reasons.push('Price above SMA20 (bullish)');
-    } else {
-      score -= 2;
-      reasons.push('Price below SMA20 (bearish)');
-    }
-    
-    if (indicators.ema12 > indicators.ema26) {
-      score += 2;
-      reasons.push('EMA bullish cross');
-    } else {
-      score -= 2;
-      reasons.push('EMA bearish cross');
-    }
+   if (currentPrice > indicators.sma20) {
+            score += 2;
+        } else {
+            score -= 2;
+        }
     
     // Trend confirmation
     if (trend === 'BULLISH') {
