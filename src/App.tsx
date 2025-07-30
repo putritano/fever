@@ -41,52 +41,58 @@ function App() {
 }, [candles]);
   // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
-    if (!analysis || candles.length === 0) return;
+  // Reset trạng thái xung đột mỗi khi phân tích thay đổi
+  setAnalysisConflict(false);
 
-    // Check if current signal is actionable (BUY or SELL)
-    const currentSignal = analysis.signals[0];
-    const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+  if (!baseAnalysis || candles.length === 0) return;
+
+  const currentSignal = baseAnalysis.signals[0];
+  const isActionableSignal = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+  const timeSinceLastAI = Date.now() - lastAiCall;
+  const shouldCallAI = isActionableSignal && timeSinceLastAI > 300000;
+
+  if (!shouldCallAI) {
+    setEnhancedAnalysis(null); // Không có AI, reset enhancedAnalysis
+    return;
+  }
+
+  const enhanceWithAI = async () => {
+    setAiProcessing(true);
+    setLastAiCall(Date.now());
     
-    // Only call AI if we have an actionable signal and haven't called recently (5 minute cooldown)
-    const timeSinceLastAI = Date.now() - lastAiCall;
-    const shouldCallAI = isActionableSignal && timeSinceLastAI > 6000; // 5 minutes
-
-    if (!shouldCallAI) {
-      // Use basic analysis without AI enhancement
-      setEnhancedAnalysis(analysis);
-      return;
-    }
-
-    const enhanceWithAI = async () => {
-      setAiProcessing(true);
-      setLastAiCall(Date.now());
+    try {
+      const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
+      const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
+        candles, 
+        indicators, 
+        baseAnalysis.trend, 
+        baseAnalysis.momentum
+      );
       
-      try {
-        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation`);
-        const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
-        const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
-          candles, 
-          indicators, 
-          analysis.trend, 
-          analysis.momentum
-        );
-        
-        setEnhancedAnalysis({
-          ...analysis,
-          signals: enhancedSignals
-        });
-        
-        console.log('✅ AI enhancement completed successfully');
-      } catch (error) {
-        console.error('AI enhancement failed:', error);
-        setEnhancedAnalysis(analysis); // Fallback to basic analysis
-      } finally {
-        setAiProcessing(false);
+      const finalAnalysis = {
+        ...baseAnalysis,
+        signals: enhancedSignals
+      };
+      setEnhancedAnalysis(finalAnalysis);
+      
+      // *** LOGIC PHÁT HIỆN XUNG ĐỘT ***
+      const taAction = baseAnalysis.signals[0].action;
+      const aiAction = finalAnalysis.signals[0].action;
+      
+      if (taAction !== aiAction) {
+        setAnalysisConflict({ ta: taAction, ai: aiAction });
       }
-    };
+      
+    } catch (error) {
+      console.error('AI enhancement failed:', error);
+      setEnhancedAnalysis(baseAnalysis); // Fallback to basic analysis
+    } finally {
+      setAiProcessing(false);
+    }
+  };
 
-    enhanceWithAI();
-  }, [analysis, candles, lastAiCall]);
+  enhanceWithAI();
+}, [baseAnalysis, candles, lastAiCall]); // Phụ thuộc vào baseAnalysis
 
   const indicators = useMemo(() => {
     if (candles.length === 0) return null;
