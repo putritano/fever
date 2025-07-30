@@ -44,7 +44,7 @@ export class TelegramService {
     const strengthEmoji = '🚀'; // Combined strong signal emoji
     
     return `
-${emoji} <b>BITCOIN TRADING SIGNAL</b> ${strengthEmoji}
+${emoji} <b>EUR/USD TRADING SIGNAL</b> ${strengthEmoji}
 
 <b>Action:</b> ${signal.action}
 <b>Strength:</b> STRONG

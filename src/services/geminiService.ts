@@ -53,7 +53,7 @@ export class GeminiService {
       recentLows: recent.map(c => c.low),
       indicators,
       currentSignal: signal,
-      marketCap: 'Large Cap', // Bitcoin is always large cap
+      marketCap: 'Major Pair', // EUR/USD is a major forex pair
       volatility: this.calculateVolatility(recent)
     };
   }
@@ -73,7 +73,7 @@ export class GeminiService {
 
   private createAnalysisPrompt(data: any): string {
     return `
-Bạn là một chuyên gia phân tích giao dịch Bitcoin với 15 năm kinh nghiệm. Hãy phân tích dữ liệu thị trường sau và đưa ra dự đoán chính xác:
+Bạn là một chuyên gia phân tích giao dịch Forex EUR/USD với 15 năm kinh nghiệm. Hãy phân tích dữ liệu thị trường sau và đưa ra dự đoán chính xác:
 
 THÔNG TIN THỊ TRƯỜNG:
 - Giá hiện tại: $${data.currentPrice.toFixed(2)}
