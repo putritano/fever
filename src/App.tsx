@@ -33,8 +33,7 @@ function App() {
   const [lastAiCall, setLastAiCall] = useState<number>(0);
 
   const [analysisConflict, setAnalysisConflict] = useState<
-  { ta: string; ai: string } | false
->(false);
+  { ta: string; ai: string } | false > (false);
   
   // Get AI-enhanced analysis only for BUY/SELL signals
   useEffect(() => {
