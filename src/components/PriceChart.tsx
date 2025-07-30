@@ -134,7 +134,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-white mb-4">BTC/USDT Price Chart</h3>
+      <h3 className="text-lg font-semibold text-white mb-4">EUR/USDT Price Chart</h3>
       <canvas
         ref={canvasRef}
         width={width}
