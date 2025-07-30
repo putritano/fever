@@ -150,7 +150,7 @@ export class TechnicalAnalyzer {
     
     // Determine momentum
     let momentum: 'STRONG' | 'WEAK' | 'NEUTRAL' = 'NEUTRAL';
-    if (Math.abs(priceChange) > 0.05) { // Lower threshold for forex
+    if (Math.abs(priceChange) > 0.01) { // Lower threshold for forex
       momentum = (indicators.rsi > 65 || indicators.rsi < 35) && Math.abs(indicators.macdHistogram) > 0.0001 ? 'STRONG' : 'WEAK';
     }
     
