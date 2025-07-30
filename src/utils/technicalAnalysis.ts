@@ -422,10 +422,10 @@ export class TechnicalAnalyzer {
             }
         } else if (score <= -4) { // MODERATE SELL
             action = 'SELL';
-            if (score <= -12) { // VERY_STRONG SELL (từ -12 xuống -10)
+            if (score <= -12) { 
                 strength = 'VERY_STRONG';
                 probability = 90;
-            } else if (score <= -8) { // STRONG SELL (từ -8 xuống -7)
+            } else if (score <= -8) { 
                 strength = 'STRONG';
                 probability = 80;
             } else {
