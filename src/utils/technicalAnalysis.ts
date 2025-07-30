@@ -282,13 +282,13 @@ export class TechnicalAnalyzer {
         let reason: string;
 
         // Điều chỉnh các ngưỡng điểm số để tín hiệu nhạy hơn
-        if (score >= 5) { // Giảm ngưỡng từ 5 xuống 4 cho MODERATE BUY
+        if (score >= 5) {
             action = 'BUY';
             if (score >= 10) { // Tăng ngưỡng STRONG từ 8 lên 10
                 strength = 'VERY_STRONG';
                 probability = 90;
                 reason = 'Very Strong Buy Signal based on multiple confirming indicators and strong momentum.';
-            } else if (score >= 7) { // Giảm ngưỡng VERY_STRONG từ 12 xuống 7
+            } else if (score >= 12) { // Giảm ngưỡng VERY_STRONG từ 12 xuống 7
                 strength = 'STRONG';
                 probability = 80;
                 reason = 'Strong Buy Signal with confirming technical factors.';
