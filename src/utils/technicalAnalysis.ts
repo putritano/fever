@@ -153,9 +153,9 @@ export class TechnicalAnalyzer {
             macdSignal,
             macdHistogram,
             rsi,
-            atr, // Bao gồm ATR
-            volume: volumes[volumes.length - 1], // Khối lượng nến hiện tại
-            avgVolume, // Khối lượng trung bình
+            atr,
+            volume: volumes[volumes.length - 1],
+            avgVolume,
             trend,
             momentum
         };
