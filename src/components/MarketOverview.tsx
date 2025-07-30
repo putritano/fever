@@ -53,7 +53,7 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
             <div className="text-2xl font-bold text-white">
               ${currentPrice.toFixed(2)}
             </div>
-            <div className="text-sm text-gray-400">BTC/USDT</div>
+            <div className="text-sm text-gray-400">EUR/USDT</div>
           </div>
           <div className={`text-right ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             <div className="text-lg font-semibold">
