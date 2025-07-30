@@ -282,7 +282,7 @@ export class TechnicalAnalyzer {
         let reason: string;
 
         // Điều chỉnh các ngưỡng điểm số để tín hiệu nhạy hơn
-        if (score >= 4) { // Giảm ngưỡng từ 5 xuống 4 cho MODERATE BUY
+        if (score >= 5) { // Giảm ngưỡng từ 5 xuống 4 cho MODERATE BUY
             action = 'BUY';
             if (score >= 10) { // Tăng ngưỡng STRONG từ 8 lên 10
                 strength = 'VERY_STRONG';
