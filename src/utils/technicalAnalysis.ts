@@ -158,7 +158,7 @@ export class TechnicalAnalyzer {
     const volatility = this.calculateVolatility(candles);
     let volatilityLevel: 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
     if (volatility > 0.3) volatilityLevel = 'HIGH'; // Lower threshold for forex
-    else if (volatility < 0.1) volatilityLevel = 'LOW';
+    else if (volatility < 0.05) volatilityLevel = 'LOW';
     
     // Generate trading signals
     const signals = this.generateTradingSignals(candles, indicators, trend, momentum);
