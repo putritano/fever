@@ -13,7 +13,7 @@ export const useBinanceData = (updateInterval: number = 5000) => {
       setError(null);
       setIsConnected(false);
       const response = await fetch(
-        'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=1000'
+        'https://api.binance.com/api/v3/klines?symbol=EURUSDT&interval=1m&limit=1000'
       );
       
       if (!response.ok) {
