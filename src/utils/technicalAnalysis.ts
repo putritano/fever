@@ -113,7 +113,6 @@ export class TechnicalAnalyzer {
     }
 
     static getTechnicalIndicators(candles: ProcessedCandle[]): TechnicalIndicators {
-        // Fix for "currentPrice is not defined" error in trend calculation
         if (candles.length === 0) {
             return {
                 sma20: 0, sma50: 0, ema12: 0, ema26: 0, rsi: 50,
@@ -156,17 +155,17 @@ export class TechnicalAnalyzer {
         let momentum: 'STRONG_UP' | 'UP' | 'NEUTRAL' | 'DOWN' | 'STRONG_DOWN' | 'UNDEFINED' = 'NEUTRAL';
         const priceChange = ((currentPrice - candles[candles.length - 2]?.close) / candles[candles.length - 2]?.close) * 100 || 0;
 
-        // Lower thresholds for forex volatility
-        const macdHistThresholdStrong = 0.00005; // Reduced from 0.0001
-        const macdHistThresholdWeak = 0.00001; // Further reduced for UP/DOWN
+        // Increased thresholds for forex volatility for more certainty
+        const macdHistThresholdStrong = 0.00008; // Increased from 0.00005
+        const macdHistThresholdWeak = 0.00003; // Increased from 0.00001
 
         if (macdData.histogram > macdHistThresholdStrong && priceChange > 0) {
             momentum = 'STRONG_UP';
-        } else if (macdData.histogram > 0) {
+        } else if (macdData.histogram > macdHistThresholdWeak) { // Use weak threshold for general 'UP'
             momentum = 'UP';
         } else if (macdData.histogram < -macdHistThresholdStrong && priceChange < 0) {
             momentum = 'STRONG_DOWN';
-        } else if (macdData.histogram < 0) {
+        } else if (macdData.histogram < -macdHistThresholdWeak) { // Use weak threshold for general 'DOWN'
             momentum = 'DOWN';
         }
 
@@ -245,9 +244,9 @@ export class TechnicalAnalyzer {
         // Determine volatility
         const volatility = this.calculateVolatility(candles);
         let volatilityLevel: 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
-        // Điều chỉnh ngưỡng biến động cho Forex
-        if (volatility > 0.005) volatilityLevel = 'HIGH'; // Ví dụ: > 0.005% biến động trung bình ngày
-        else if (volatility < 0.001) volatilityLevel = 'LOW'; // Ví dụ: < 0.001% biến động trung bình ngày
+        // Adjust volatility thresholds for Forex to be more certain (higher thresholds)
+        if (volatility > 0.01) volatilityLevel = 'HIGH'; // Increased from 0.005
+        else if (volatility < 0.002) volatilityLevel = 'LOW'; // Increased from 0.001
 
         // Generate trading signals
         const signals = this.generateTradingSignals(candles, indicators, currentPrice, trend, momentum);
@@ -314,7 +313,7 @@ export class TechnicalAnalyzer {
         return [basicSignal];
     }
 
-    // Phương thức tính toán tín hiệu cho một tick/nến cụ thể (đã điều chỉnh độ nhạy cho EURUSDT)
+    // Phương thức tính toán tín hiệu cho một tick/nến cụ thể (đã điều chỉnh độ chắc chắn cho EURUSDT)
     static calculateCurrentTickSignal(
         candles: ProcessedCandle[], // Cần truyền toàn bộ candles để tính toán ATR và Volume
         indicators: TechnicalIndicators,
@@ -325,39 +324,39 @@ export class TechnicalAnalyzer {
         let score = 0;
         let reasons: string[] = [];
 
-        // 1. RSI (Relative Strength Index) - Điều chỉnh ngưỡng cho EURUSDT M1 để nhạy hơn
-        if (indicators.rsi < 35) { // Ngưỡng quá bán
+        // 1. RSI (Relative Strength Index) - Điều chỉnh ngưỡng cho EURUSDT để chắc chắn hơn
+        if (indicators.rsi <= 30) { // Ngưỡng quá bán sâu
             score += 3;
-            reasons.push('RSI oversold (strong buy signal)');
-        } else if (indicators.rsi < 45) { // Ngưỡng gần quá bán
+            reasons.push('RSI deeply oversold (strong buy signal)');
+        } else if (indicators.rsi < 40) { // Ngưỡng gần quá bán
             score += 1;
             reasons.push('RSI approaching oversold');
         }
 
-        if (indicators.rsi > 65) { // Ngưỡng quá mua
+        if (indicators.rsi >= 70) { // Ngưỡng quá mua sâu
             score -= 3;
-            reasons.push('RSI overbought (strong sell signal)');
-        } else if (indicators.rsi > 55) { // Ngưỡng gần quá mua
+            reasons.push('RSI deeply overbought (strong sell signal)');
+        } else if (indicators.rsi > 60) { // Ngưỡng gần quá mua
             score -= 1;
             reasons.push('RSI approaching overbought');
         }
 
-        // 2. MACD (Moving Average Convergence Divergence) - Điều chỉnh ngưỡng histogram cho EURUSDT
-        const macdThreshold = 0.00001; // Ngưỡng cực nhỏ để bắt các biến động nhỏ
+        // 2. MACD (Moving Average Convergence Divergence) - Điều chỉnh ngưỡng histogram cho EURUSDT để chắc chắn hơn
+        const macdThreshold = 0.0001; // Tăng ngưỡng để yêu cầu động lượng rõ ràng hơn
 
         if (indicators.macdHistogram > macdThreshold && indicators.macd > indicators.macdSignal) {
-            score += 2; // MACD Bullish crossover with positive histogram
-            reasons.push('MACD bullish crossover');
-        } else if (indicators.macdHistogram > 0) {
-            score += 1; // MACD Histogram dương
+            score += 2; // MACD Bullish crossover with significant positive histogram
+            reasons.push('MACD bullish crossover with strong momentum');
+        } else if (indicators.macdHistogram > 0.00005) { // Ngưỡng nhỏ hơn để thêm điểm cho động lượng dương
+            score += 1;
             reasons.push('MACD histogram positive');
         }
 
         if (indicators.macdHistogram < -macdThreshold && indicators.macd < indicators.macdSignal) {
-            score -= 2; // MACD Bearish crossover with negative histogram
-            reasons.push('MACD bearish crossover');
-        } else if (indicators.macdHistogram < 0) {
-            score -= 1; // MACD Histogram âm
+            score -= 2; // MACD Bearish crossover with significant negative histogram
+            reasons.push('MACD bearish crossover with strong momentum');
+        } else if (indicators.macdHistogram < -0.00005) { // Ngưỡng nhỏ hơn để trừ điểm cho động lượng âm
+            score -= 1;
             reasons.push('MACD histogram negative');
         }
 
@@ -387,45 +386,43 @@ export class TechnicalAnalyzer {
             reasons.push('Bearish trend');
         }
 
-        // 5. Volume analysis - Điều chỉnh ngưỡng cao hơn cho Forex M1 (nhiều nhiễu)
+        // 5. Volume analysis - Yêu cầu khối lượng đột biến lớn hơn để xác nhận
         const currentVolume = candles[candles.length - 1].volume;
-        // Đảm bảo avgVolume được tính đúng từ indicators hoặc từ dữ liệu nến
         const avgVolume = indicators.avgVolume > 0 ? indicators.avgVolume :
-                          (candles.length >= 20 ? candles.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20 : 1); // Fallback to 1 to avoid div by zero
+                          (candles.length >= 20 ? candles.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20 : 1);
         
-        if (currentVolume > avgVolume * 2) { // Yêu cầu volume gấp đôi trung bình để xác nhận
+        if (currentVolume > avgVolume * 2.5) { // Yêu cầu volume lớn gấp 2.5 lần trung bình (từ 2.0)
              score += Math.sign(score) * 1; // Khuếch đại tín hiệu hiện có (nếu có)
              reasons.push('High volume confirmation');
         }
 
 
-        // 6. Volatility (đã được tính và có thể sử dụng nếu muốn ảnh hưởng đến score)
-        // Hiện tại không dùng trực tiếp để thêm/bớt score ở đây, nhưng có thể thêm nếu cần.
+        // 6. Volatility (có thể ảnh hưởng đến confidence, nhưng không trực tiếp thêm/bớt score ở đây)
 
-        // Xác định action và strength dựa trên score (đã điều chỉnh nhạy hơn)
+        // Xác định action và strength dựa trên score (đã điều chỉnh để chắc chắn hơn)
         let action: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
         let confidence = 0;
         let probability = 50;
         let strength: 'WEAK' | 'MODERATE' | 'STRONG' | 'VERY_STRONG' = 'WEAK';
 
-        if (score >= 5) { // MODERATE BUY
+        if (score >= 6) { // MODERATE BUY (tăng từ 4 lên 6)
             action = 'BUY';
-            if (score >= 12) { // VERY_STRONG BUY (từ 12 xuống 10)
+            if (score >= 13) { // VERY_STRONG BUY (tăng từ 10 lên 13)
                 strength = 'VERY_STRONG';
                 probability = 90;
-            } else if (score >= 8) { // STRONG BUY (từ 8 xuống 7)
+            } else if (score >= 9) { // STRONG BUY (tăng từ 7 lên 9)
                 strength = 'STRONG';
                 probability = 80;
             } else {
                 strength = 'MODERATE';
                 probability = 65;
             }
-        } else if (score <= -4) { // MODERATE SELL
+        } else if (score <= -6) { // MODERATE SELL (tăng từ -4 lên -6)
             action = 'SELL';
-            if (score <= -12) { 
+            if (score <= -13) { // VERY_STRONG SELL
                 strength = 'VERY_STRONG';
                 probability = 90;
-            } else if (score <= -8) { 
+            } else if (score <= -9) { // STRONG SELL
                 strength = 'STRONG';
                 probability = 80;
             } else {
@@ -444,10 +441,9 @@ export class TechnicalAnalyzer {
         probability = Math.round(probability * historicalAccuracy);
 
         // Tính toán Stop Loss và Take Profit dựa trên ATR
-        // ATR được truyền từ indicators, đảm bảo nó là số hợp lệ
-        const atr = indicators.atr && !isNaN(indicators.atr) && indicators.atr > 0 ? indicators.atr : 0.00005; // Fallback nhỏ nếu ATR không hợp lệ
-        const riskRewardRatio = 1.5; // Tỷ lệ R:R mong muốn
-        const atrMultiplier = 1.5; // Dùng 1.5 lần ATR cho SL/TP
+        const atr = indicators.atr && !isNaN(indicators.atr) && indicators.atr > 0 ? indicators.atr : 0.00005;
+        const riskRewardRatio = 1.5;
+        const atrMultiplier = 1.5; 
 
         let stop_loss = 0;
         let take_profit = 0;
@@ -459,7 +455,6 @@ export class TechnicalAnalyzer {
             stop_loss = currentPrice + (atr * atrMultiplier);
             take_profit = currentPrice - (atr * atrMultiplier * riskRewardRatio);
         } else {
-            // Đối với HOLD, SL/TP thường không có ý nghĩa, có thể đặt bằng giá hiện tại
             stop_loss = currentPrice;
             take_profit = currentPrice;
         }
@@ -468,11 +463,11 @@ export class TechnicalAnalyzer {
             action,
             confidence: Math.round(confidence),
             timestamp: Date.now(),
-            reason: reasons.join(', ') || 'No clear signal based on current analysis.', // Fallback reason
+            reason: reasons.join(', ') || 'No clear signal based on current analysis.',
             probability: Math.round(probability),
             strength,
-            entry_price: parseFloat(currentPrice.toFixed(5)), // Làm tròn giá vào lệnh
-            stop_loss: parseFloat(stop_loss.toFixed(5)), // Làm tròn SL/TP đến 5 chữ số thập phân cho Forex
+            entry_price: parseFloat(currentPrice.toFixed(5)),
+            stop_loss: parseFloat(stop_loss.toFixed(5)),
             take_profit: parseFloat(take_profit.toFixed(5))
         };
     }
@@ -481,11 +476,11 @@ export class TechnicalAnalyzer {
     static calculateHistoricalAccuracy(candles: ProcessedCandle[], indicators: TechnicalIndicators): number {
         let accuracy = 0.75; // Base accuracy
 
-        if (indicators.rsi > 70 || indicators.rsi < 30) {
-            accuracy += 0.1; // Higher accuracy in extreme conditions
+        if (indicators.rsi >= 70 || indicators.rsi <= 30) { // Only extreme RSI values for higher accuracy
+            accuracy += 0.1;
         }
         if (Math.abs(indicators.macdHistogram) > 0.0001) { // Sử dụng ngưỡng MACD phù hợp
-            accuracy += 0.05; // Better accuracy with strong MACD signals
+            accuracy += 0.05;
         }
 
         return Math.min(accuracy, 0.95);
@@ -512,9 +507,9 @@ export interface TechnicalIndicators {
     macdSignal: number;
     macdHistogram: number;
     rsi: number;
-    atr: number; // Đảm bảo ATR được thêm vào
-    volume: number; // Current candle's volume
-    avgVolume: number; // Average volume
+    atr: number;
+    volume: number;
+    avgVolume: number;
     trend: 'BULLISH' | 'BEARISH' | 'SIDEWAYS' | 'UNDEFINED';
     momentum: 'STRONG_UP' | 'UP' | 'NEUTRAL' | 'DOWN' | 'STRONG_DOWN' | 'UNDEFINED';
 }
@@ -525,10 +520,10 @@ export type Momentum = 'STRONG_UP' | 'UP' | 'NEUTRAL' | 'DOWN' | 'STRONG_DOWN' |
 
 export interface TradingSignal {
     action: 'BUY' | 'SELL' | 'HOLD';
-    confidence: number; // 0-100%
+    confidence: number;
     timestamp: number;
     reason: string;
-    probability: number; // 0-100%, có thể trùng với confidence
+    probability: number;
     strength: 'WEAK' | 'MODERATE' | 'STRONG' | 'VERY_STRONG';
     entry_price: number;
     stop_loss: number;
@@ -538,6 +533,6 @@ export interface TradingSignal {
 export interface MarketAnalysis {
     trend: Trend;
     momentum: Momentum;
-    volatility: 'HIGH' | 'MEDIUM' | 'LOW'; // Thêm volatility
+    volatility: 'HIGH' | 'MEDIUM' | 'LOW';
     signals: TradingSignal[];
 }
