@@ -283,7 +283,7 @@ function App() {
             <div>
               <h3 className="text-yellow-400 font-semibold mb-2">Risk Warning</h3>
               <p className="text-yellow-100 text-sm leading-relaxed">
-                Đừng tham lam. Lương của mày chỉ được 500 cành / ngày hôm nay thôi.
+                Đừng tham lam. Forex EUR/USD có thể biến động mạnh. Quản lý rủi ro cẩn thận.
               </p>
             </div>
           </div>
