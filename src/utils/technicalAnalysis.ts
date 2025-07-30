@@ -425,7 +425,7 @@ export class TechnicalAnalyzer {
             if (score <= -12) { // VERY_STRONG SELL (từ -12 xuống -10)
                 strength = 'VERY_STRONG';
                 probability = 90;
-            } else if (score <= -7) { // STRONG SELL (từ -8 xuống -7)
+            } else if (score <= -8) { // STRONG SELL (từ -8 xuống -7)
                 strength = 'STRONG';
                 probability = 80;
             } else {
