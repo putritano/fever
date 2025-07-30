@@ -13,7 +13,7 @@ export class TechnicalAnalyzer {
             return null;
         }
         
-      const currentPrice = candles[candles.length - 1].close;
+        const currentPrice = candles[candles.length - 1].close;
         const closes = candles.map(c => c.close);
         const highPrices = candles.map(c => c.high);
         const lowPrices = candles.map(c => c.low);
