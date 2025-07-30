@@ -202,7 +202,7 @@ function App() {
   }
 
   // Use enhanced analysis if available, otherwise fall back to basic analysis
-  const displayAnalysis = enhancedAnalysis || analysis;
+  const displayAnalysis = enhancedAnalysis || baseAnalysis; 
   const currentPrice = candles[candles.length - 1].close;
 
   return (
