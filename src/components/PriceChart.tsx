@@ -1,16 +1,20 @@
 import React, { useRef, useEffect } from 'react';
-import { ProcessedCandle } from '../types/trading';
+import { ProcessedCandle, TradingSymbol } from '../types/trading';
 
 interface PriceChartProps {
   candles: ProcessedCandle[];
+  symbol: TradingSymbol;
   width?: number;
   height?: number;
+  signals?: any[];
 }
 
 export const PriceChart: React.FC<PriceChartProps> = ({ 
   candles, 
+  symbol,
   width = 800, 
-  height = 400 
+  height = 400,
+  signals = []
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -108,7 +112,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     for (let i = 0; i <= 5; i++) {
       const price = maxPrice - (i / 5) * priceRange;
       const y = margin.top + (i / 5) * chartHeight;
-      ctx.fillText(price.toFixed(5), width - margin.right + 5, y + 4);
+      ctx.fillText(price.toFixed(symbol.priceDecimals), width - margin.right + 5, y + 4);
     }
 
     // Draw current price
@@ -128,13 +132,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     ctx.fillStyle = '#F59E0B';
     ctx.font = 'bold 14px system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText(`$${currentPrice.toFixed(5)}`, width - margin.right + 5, currentY + 4);
+    ctx.fillText(`$${currentPrice.toFixed(symbol.priceDecimals)}`, width - margin.right + 5, currentY + 4);
 
-  }, [candles, width, height]);
+  }, [candles, symbol, width, height]);
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-white mb-4">EUR/USDT Price Chart</h3>
+      <h3 className="text-lg font-semibold text-white mb-4">{symbol.displayName} Price Chart</h3>
       <canvas
         ref={canvasRef}
         width={width}

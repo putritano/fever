@@ -1,10 +1,11 @@
 import React from 'react';
-import { MarketAnalysis, TechnicalIndicators } from '../types/trading';
+import { MarketAnalysis, TechnicalIndicators, TradingSymbol } from '../types/trading';
 import { BarChart3, Activity, TrendingUp } from 'lucide-react';
 
 interface MarketOverviewProps {
   analysis: MarketAnalysis;
   indicators: TechnicalIndicators;
+  symbol: TradingSymbol;
   currentPrice: number;
   priceChange: number;
 }
@@ -12,6 +13,7 @@ interface MarketOverviewProps {
 export const MarketOverview: React.FC<MarketOverviewProps> = ({
   analysis,
   indicators,
+  symbol,
   currentPrice,
   priceChange
 }) => {
@@ -51,9 +53,9 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-2xl font-bold text-white">
-              ${currentPrice.toFixed(5)}
+              ${currentPrice.toFixed(symbol.priceDecimals)}
             </div>
-            <div className="text-sm text-gray-400">EUR/USDT</div>
+            <div className="text-sm text-gray-400">{symbol.displayName}</div>
           </div>
           <div className={`text-right ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             <div className="text-lg font-semibold">
@@ -113,7 +115,7 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
             <div className={`font-semibold ${
               indicators.macd > indicators.macdSignal ? 'text-green-400' : 'text-red-400'
             }`}>
-              {indicators.macd.toFixed(3)}
+              {indicators.macd.toFixed(symbol.category === 'CRYPTO' ? 2 : 6)}
             </div>
           </div>
           
@@ -122,7 +124,7 @@ export const MarketOverview: React.FC<MarketOverviewProps> = ({
             <div className={`font-semibold ${
               currentPrice > indicators.sma20 ? 'text-green-400' : 'text-red-400'
             }`}>
-              ${indicators.sma20.toFixed(5)}
+              ${indicators.sma20.toFixed(symbol.priceDecimals)}
             </div>
           </div>
           

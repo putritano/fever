@@ -5,12 +5,27 @@ import { PriceChart } from './components/PriceChart';
 import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
+import { SymbolSelector } from './components/SymbolSelector';
 import { TelegramService } from './services/telegramService';
-import { TelegramConfig, TradingSignal, MarketAnalysis } from './types/trading';
+import { TelegramConfig, TradingSignal, MarketAnalysis, TradingSymbol } from './types/trading';
+import { DEFAULT_SYMBOL } from './config/symbols';
 import { RefreshCw, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 
 function App() {
-  const { candles, loading, error, lastUpdate, isConnected, refetch } = useBinanceData(5000); // 5 second updates
+  // Symbol state
+  const [currentSymbol, setCurrentSymbol] = useState<TradingSymbol>(() => {
+    const savedSymbol = localStorage.getItem('selected_symbol');
+    if (savedSymbol) {
+      try {
+        return JSON.parse(savedSymbol);
+      } catch {
+        return DEFAULT_SYMBOL;
+      }
+    }
+    return DEFAULT_SYMBOL;
+  });
+
+  const { candles, loading, error, lastUpdate, isConnected, refetch } = useBinanceData(5000, currentSymbol); // 5 second updates
 
   const [telegramConfig, setTelegramConfig] = useState<TelegramConfig>({
     botToken: localStorage.getItem('telegram_bot_token') || '',
@@ -21,6 +36,15 @@ function App() {
   const [telegramService] = useState(() => new TelegramService(telegramConfig));
   const [lastSignalSent, setLastSignalSent] = useState<number>(0);
 
+  // Handle symbol change
+  const handleSymbolChange = useCallback((symbol: TradingSymbol) => {
+    setCurrentSymbol(symbol);
+    localStorage.setItem('selected_symbol', JSON.stringify(symbol));
+    // Reset analysis states when symbol changes
+    setBaseAnalysis(null);
+    setEnhancedAnalysis(null);
+    setAnalysisConflict(false);
+  }, []);
   // baseAnalysis will hold the result of TechnicalAnalyzer.analyzeMarket
   const [baseAnalysis, setBaseAnalysis] = useState<MarketAnalysis | null>(null);
 
@@ -78,7 +102,8 @@ function App() {
           candles,
           indicators,
           baseAnalysis.trend,
-          baseAnalysis.momentum
+          baseAnalysis.momentum,
+          currentSymbol
         );
 
         const finalAnalysis = {
@@ -105,7 +130,7 @@ function App() {
     };
 
     enhanceWithAI();
-  }, [baseAnalysis, candles, lastAiCall]); // Depend on baseAnalysis
+  }, [baseAnalysis, candles, lastAiCall, currentSymbol]); // Depend on baseAnalysis and currentSymbol
 
   const indicators = useMemo(() => {
     if (candles.length === 0) return null;
@@ -136,7 +161,7 @@ function App() {
       action: 'BUY',
       confidence: 85,
       timestamp: Date.now(),
-      reason: 'Test message from Bitcoin Trading Analyzer',
+      reason: `Test message from ${currentSymbol.displayName} Trading Analyzer`,
       probability: 75,
       strength: 'STRONG',
       entry_price: candles.length > 0 ? candles[candles.length - 1].close : 50000,
@@ -150,7 +175,7 @@ function App() {
     } else {
       alert('Failed to send test message. Please check your configuration.');
     }
-  }, [telegramService, candles]);
+  }, [telegramService, candles, currentSymbol]);
 
   // Auto-send strong signals
   useEffect(() => {
@@ -262,6 +287,12 @@ function App() {
             </div>
           </div>
           <div className="text-right">
+            <div className="mb-2">
+              <SymbolSelector
+                currentSymbol={currentSymbol}
+                onSymbolChange={handleSymbolChange}
+              />
+            </div>
             <div className="flex items-center space-x-2 mb-2">
               {isConnected ? (
                 <Wifi className="w-4 h-4 text-green-400" />
@@ -289,7 +320,13 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
-            <PriceChart candles={candles.slice(-100)} width={800} height={400} signals={displayAnalysis.signals} />
+            <PriceChart 
+              candles={candles.slice(-100)} 
+              symbol={currentSymbol}
+              width={800} 
+              height={400} 
+              signals={displayAnalysis.signals} 
+            />
           </div>
 
           {/* Right Column - Market Overview */}
@@ -297,6 +334,7 @@ function App() {
             <MarketOverview
               analysis={displayAnalysis}
               indicators={indicators}
+              symbol={currentSymbol}
               currentPrice={currentPrice}
               priceChange={priceChange}
             />
@@ -305,7 +343,7 @@ function App() {
 
         {/* Trading Signals */}
         <div className="mt-6">
-          <TradingSignals signals={displayAnalysis.signals} />
+          <TradingSignals signals={displayAnalysis.signals} symbol={currentSymbol} />
         </div>
 
         {/* Telegram Settings */}

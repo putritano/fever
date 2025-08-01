@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { KlineData, ProcessedCandle } from '../types/trading';
+import { KlineData, ProcessedCandle, TradingSymbol } from '../types/trading';
 
-export const useBinanceData = (updateInterval: number = 5000) => {
+export const useBinanceData = (updateInterval: number = 5000, symbol: TradingSymbol) => {
   const [candles, setCandles] = useState<ProcessedCandle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export const useBinanceData = (updateInterval: number = 5000) => {
       setError(null);
       setIsConnected(false);
       const response = await fetch(
-        'https://api.binance.com/api/v3/klines?symbol=EURUSDT&interval=1m&limit=1000'
+        `https://api.binance.com/api/v3/klines?symbol=${symbol.symbol}&interval=1m&limit=1000`
       );
       
       if (!response.ok) {
@@ -40,7 +40,7 @@ export const useBinanceData = (updateInterval: number = 5000) => {
       setLoading(false);
       setIsConnected(false);
     }
-  }, []);
+  }, [symbol.symbol]);
 
   useEffect(() => {
     fetchData();

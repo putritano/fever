@@ -1,4 +1,4 @@
-import { ProcessedCandle, TechnicalIndicators, TradingSignal, MarketAnalysis } from '../types/trading';
+import { ProcessedCandle, TechnicalIndicators, TradingSignal, MarketAnalysis, TradingSymbol } from '../types/trading';
 import { GeminiService } from '../services/geminiService'; // Đảm bảo đường dẫn đúng
 
 export class TechnicalAnalyzer {
@@ -279,10 +279,11 @@ export class TechnicalAnalyzer {
         indicators: TechnicalIndicators,
         currentPrice: number,
         trend: string,
-        momentum: string
+        momentum: string,
+        symbol?: TradingSymbol
     ): TradingSignal[] {
         // Analyze current tick for immediate action
-        const signal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum);
+        const signal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum, symbol);
 
         return [signal];
     }
@@ -292,12 +293,13 @@ export class TechnicalAnalyzer {
         candles: ProcessedCandle[],
         indicators: TechnicalIndicators,
         trend: string,
-        momentum: string
+        momentum: string,
+        symbol?: TradingSymbol
     ): Promise<TradingSignal[]> {
         const currentPrice = candles[candles.length - 1].close;
 
         // Get basic technical analysis signal
-        const basicSignal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum);
+        const basicSignal = this.calculateCurrentTickSignal(candles, indicators, currentPrice, trend, momentum, symbol);
 
         // Only enhance with AI if signal is BUY or SELL (not HOLD)
         // Đây là nơi AI Gemini được gọi
@@ -319,11 +321,19 @@ export class TechnicalAnalyzer {
         indicators: TechnicalIndicators,
         currentPrice: number,
         trend: string,
-        momentum: string
+        momentum: string,
+        symbol?: TradingSymbol
     ): TradingSignal {
         let score = 0;
         let reasons: string[] = [];
 
+        // Adjust thresholds based on symbol category
+        const isForex = symbol?.category === 'FOREX';
+        const isCrypto = symbol?.category === 'CRYPTO';
+        
+        // Dynamic thresholds based on symbol type
+        const macdThreshold = isForex ? 0.0001 : (isCrypto ? 0.1 : 0.001);
+        const volumeMultiplier = isForex ? 2.5 : (isCrypto ? 2.0 : 2.2);
         // 1. RSI (Relative Strength Index) - Điều chỉnh ngưỡng cho EURUSDT để chắc chắn hơn
         if (indicators.rsi <= 30) { // Ngưỡng quá bán sâu
             score += 3;
@@ -342,12 +352,11 @@ export class TechnicalAnalyzer {
         }
 
         // 2. MACD (Moving Average Convergence Divergence) - Điều chỉnh ngưỡng histogram cho EURUSDT để chắc chắn hơn
-        const macdThreshold = 0.0001; // Tăng ngưỡng để yêu cầu động lượng rõ ràng hơn
 
         if (indicators.macdHistogram > macdThreshold && indicators.macd > indicators.macdSignal) {
             score += 2; // MACD Bullish crossover with significant positive histogram
             reasons.push('MACD bullish crossover with strong momentum');
-        } else if (indicators.macdHistogram > 0.00005) { // Ngưỡng nhỏ hơn để thêm điểm cho động lượng dương
+        } else if (indicators.macdHistogram > macdThreshold * 0.5) { // Ngưỡng nhỏ hơn để thêm điểm cho động lượng dương
             score += 1;
             reasons.push('MACD histogram positive');
         }
@@ -355,7 +364,7 @@ export class TechnicalAnalyzer {
         if (indicators.macdHistogram < -macdThreshold && indicators.macd < indicators.macdSignal) {
             score -= 2; // MACD Bearish crossover with significant negative histogram
             reasons.push('MACD bearish crossover with strong momentum');
-        } else if (indicators.macdHistogram < -0.00005) { // Ngưỡng nhỏ hơn để trừ điểm cho động lượng âm
+        } else if (indicators.macdHistogram < -macdThreshold * 0.5) { // Ngưỡng nhỏ hơn để trừ điểm cho động lượng âm
             score -= 1;
             reasons.push('MACD histogram negative');
         }
@@ -391,7 +400,7 @@ export class TechnicalAnalyzer {
         const avgVolume = indicators.avgVolume > 0 ? indicators.avgVolume :
                           (candles.length >= 20 ? candles.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20 : 1);
         
-        if (currentVolume > avgVolume * 2.5) { // Yêu cầu volume lớn gấp 2.5 lần trung bình (từ 2.0)
+        if (currentVolume > avgVolume * volumeMultiplier) { // Dynamic volume multiplier based on symbol
              score += Math.sign(score) * 1; // Khuếch đại tín hiệu hiện có (nếu có)
              reasons.push('High volume confirmation');
         }
@@ -443,7 +452,7 @@ export class TechnicalAnalyzer {
         // Tính toán Stop Loss và Take Profit dựa trên ATR
         const atr = indicators.atr && !isNaN(indicators.atr) && indicators.atr > 0 ? indicators.atr : 0.00005;
         const riskRewardRatio = 1.5;
-        const atrMultiplier = 1.5; 
+        const atrMultiplier = isForex ? 1.5 : (isCrypto ? 2.0 : 1.8); // Adjust ATR multiplier by symbol type
 
         let stop_loss = 0;
         let take_profit = 0;
@@ -459,6 +468,8 @@ export class TechnicalAnalyzer {
             take_profit = currentPrice;
         }
 
+        // Format prices according to symbol precision
+        const priceDecimals = symbol?.priceDecimals || 5;
         return {
             action,
             confidence: Math.round(confidence),
@@ -466,9 +477,9 @@ export class TechnicalAnalyzer {
             reason: reasons.join(', ') || 'No clear signal based on current analysis.',
             probability: Math.round(probability),
             strength,
-            entry_price: parseFloat(currentPrice.toFixed(5)),
-            stop_loss: parseFloat(stop_loss.toFixed(5)),
-            take_profit: parseFloat(take_profit.toFixed(5))
+            entry_price: parseFloat(currentPrice.toFixed(priceDecimals)),
+            stop_loss: parseFloat(stop_loss.toFixed(priceDecimals)),
+            take_profit: parseFloat(take_profit.toFixed(priceDecimals))
         };
     }
 

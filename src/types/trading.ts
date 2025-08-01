@@ -64,3 +64,21 @@ export interface PredictionModel {
   totalSignals: number;
   successfulSignals: number;
 }
+
+export interface TradingSymbol {
+  symbol: string;
+  displayName: string;
+  baseAsset: string;
+  quoteAsset: string;
+  tickSize: number;
+  minPrice: number;
+  maxPrice: number;
+  priceDecimals: number;
+  category: 'FOREX' | 'CRYPTO' | 'STOCK';
+  description: string;
+}
+
+export interface SymbolConfig {
+  currentSymbol: TradingSymbol;
+  availableSymbols: TradingSymbol[];
+}
