@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useBinanceData } from './hooks/useBinanceData';
 import { TechnicalAnalyzer } from './utils/technicalAnalysis';
 import { PriceChart } from './components/PriceChart';
-import { TradingSignals } => './components/TradingSignals';
+import { TradingSignals } from './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { SymbolSelector } from './components/SymbolSelector';
