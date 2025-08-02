@@ -197,24 +197,22 @@ function App() {
       return;
     }
 
-    // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
+    // Điều kiện gửi Telegram: AI đã xác nhận với xác suất cao, có thể hành động, và đã qua thời gian chờ
     const timeSinceLastSignal = Date.now() - lastSignalSent;
-    const isStrongSignal = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG');
-    const isHighProbability = currentSignal.probability >= 75;
-    const isActionable = (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
-    const cooldownPassed = timeSinceLastSignal > 60000; // 1 minute cooldown
+    const isHighProbabilityFromAI = currentSignal.probability >= 75; // Xác suất cao từ AI
+    const isActionable = (currentSignal.action === 'BUY' || currentSignal.action === 'SELL'); // Tín hiệu có thể hành động
+    const cooldownPassed = timeSinceLastSignal > 60000; // 1 phút cooldown
     
-    const shouldSend = isStrongSignal &&
-      isHighProbability &&
-      isActionable &&
-      cooldownPassed;
+    // Quyết định gửi Telegram chỉ dựa vào xác suất của AI, khả năng hành động và cooldown
+    const shouldSend = isHighProbabilityFromAI &&
+                       isActionable &&
+                       cooldownPassed;
 
-    console.log('🔍 Telegram auto-send check:', {
+    console.log('🔍 Telegram auto-send check (AI-driven):', {
       signal: currentSignal.action,
       strength: currentSignal.strength,
       probability: currentSignal.probability,
-      isStrongSignal,
-      isHighProbability,
+      isHighProbabilityFromAI,
       isActionable,
       cooldownPassed,
       timeSinceLastSignal: Math.round(timeSinceLastSignal / 1000) + 's',
