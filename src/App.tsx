@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useBinanceData } from './hooks/useBinanceData';
 import { TechnicalAnalyzer } from './utils/technicalAnalysis';
 import { PriceChart } from './components/PriceChart';
-import { TradingSignals } from './components/TradingSignals';
+import { TradingSignals } => './components/TradingSignals';
 import { MarketOverview } from './components/MarketOverview';
 import { TelegramSettings } from './components/TelegramSettings';
 import { SymbolSelector } from './components/SymbolSelector';
@@ -64,7 +64,7 @@ function App() {
   const [analysisConflict, setAnalysisConflict] = useState<{ ta: string; ai: string } | false>(false);
 
 
-  // Get AI-enhanced analysis only for BUY/SELL signals
+  // Get AI-enhanced analysis for actionable and high probability signals
   useEffect(() => {
     // Reset analysis conflict state when base analysis changes
     setAnalysisConflict(false);
@@ -74,16 +74,16 @@ function App() {
       return;
     }
 
-    // --- START MODIFICATION ---
     const currentSignal = baseAnalysis.signals[0];
-    const isActionableAndStrongSignal = currentSignal &&
-      (currentSignal.action === 'BUY' || currentSignal.action === 'SELL') &&
-      (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG');
-
-    // Only call AI if we have an actionable AND STRONG signal and haven't called recently (6 second cooldown)
+    
+    // Define conditions for calling AI
+    const isActionable = currentSignal && (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+    const isHighProbability = currentSignal && currentSignal.probability >= 75; // Using 75% probability as threshold
     const timeSinceLastAI = Date.now() - lastAiCall;
-    const shouldCallAI = isActionableAndStrongSignal && timeSinceLastAI > 1000; // 6 seconds cooldown
-    // --- END MODIFICATION ---
+    const cooldownPassedForAI = timeSinceLastAI > 1000; // 1 second cooldown for AI calls
+
+    // Call AI if signal is actionable, high probability, and cooldown has passed
+    const shouldCallAI = isActionable && isHighProbability && cooldownPassedForAI;
 
     if (!shouldCallAI) {
       // If AI shouldn't be called, use the basic analysis
@@ -96,7 +96,7 @@ function App() {
       setLastAiCall(Date.now());
 
       try {
-        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation (Strength: ${currentSignal.strength})`); // Added strength for logging
+        console.log(`🤖 Calling Gemini AI for ${currentSignal.action} signal confirmation (Probability: ${currentSignal.probability}%, Strength: ${currentSignal.strength})`); // Added strength for logging
         const indicators = TechnicalAnalyzer.getTechnicalIndicators(candles);
         const enhancedSignals = await TechnicalAnalyzer.generateEnhancedTradingSignals(
           candles,
@@ -212,7 +212,7 @@ function App() {
     console.log('🔍 Telegram auto-send check:', {
       signal: currentSignal.action,
       strength: currentSignal.strength,
-      probability: currentSignal.probability, // This was the problematic line, now correctly formatted
+      probability: currentSignal.probability,
       isStrongSignal,
       isHighProbability,
       isActionable,
