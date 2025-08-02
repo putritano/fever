@@ -179,25 +179,60 @@ function App() {
 
   // Auto-send strong signals
   useEffect(() => {
-    if (!enhancedAnalysis || !telegramConfig.enabled) return;
+    if (!enhancedAnalysis || !telegramConfig.enabled || !telegramConfig.botToken || !telegramConfig.chatId) {
+      console.log('❌ Telegram auto-send skipped:', {
+        hasAnalysis: !!enhancedAnalysis,
+        enabled: telegramConfig.enabled,
+        hasToken: !!telegramConfig.botToken,
+        hasChatId: !!telegramConfig.chatId
+      });
+      return;
+    }
 
     const currentSignal = enhancedAnalysis.signals[0];
-    if (!currentSignal) return;
+    if (!currentSignal) {
+      console.log('❌ No signal found for auto-send');
+      return;
+    }
 
     // Only send if it's a strong signal and we haven't sent one recently (prevent spam)
     const timeSinceLastSignal = Date.now() - lastSignalSent;
-    const shouldSend = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG') &&
+    const isStrongSignal = (currentSignal.strength === 'STRONG' || currentSignal.strength === 'VERY_STRONG');
+    const isHighProbability = currentSignal.probability >= 75;
+    const isActionable = (currentSignal.action === 'BUY' || currentSignal.action === 'SELL');
+    const cooldownPassed = timeSinceLastSignal > 60000; // 1 minute cooldown
+    
+    const shouldSend = isStrongSignal &&
+      isHighProbability &&
+      isActionable &&
+      cooldownPassed;
+
+    console.log('🔍 Telegram auto-send check:', {
+      signal: currentSignal.action,
+      strength: currentSignal.strength,
       currentSignal.probability >= 75 &&
-      timeSinceLastSignal > 1000; // 6 seconds cooldown
+      probability: currentSignal.probability,
+      isStrongSignal,
+      isHighProbability,
+      isActionable,
+      cooldownPassed,
+      timeSinceLastSignal: Math.round(timeSinceLastSignal / 1000) + 's',
+      shouldSend
+    });
 
     if (shouldSend) {
+      console.log('📤 Sending Telegram alert...');
       const currentPrice = candles[candles.length - 1].close;
       telegramService.sendTradingAlert(currentSignal, currentPrice).then(success => {
         if (success) {
           setLastSignalSent(Date.now());
-          console.log('Trading signal sent to Telegram');
+          console.log('✅ Trading signal sent to Telegram successfully');
+        } else {
+          console.log('❌ Failed to send trading signal to Telegram');
         }
       });
+    } else {
+      console.log('⏸️ Signal not sent - conditions not met');
     }
   }, [enhancedAnalysis, telegramConfig.enabled, telegramService, candles, lastSignalSent]);
 

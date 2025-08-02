@@ -8,16 +8,30 @@ export class TelegramService {
   }
 
   async sendTradingAlert(signal: TradingSignal, currentPrice: number): Promise<boolean> {
-    if (!this.config.enabled || !this.config.botToken || !this.config.chatId) {
+    console.log('📱 TelegramService.sendTradingAlert called:', {
+      enabled: this.config.enabled,
+      hasToken: !!this.config.botToken,
+      hasChatId: !!this.config.chatId,
+      signal: signal.action,
+      strength: signal.strength,
+      probability: signal.probability
+    });
+
+    if (!this.config.enabled) {
+      console.log('❌ Telegram not enabled');
       return false;
     }
 
-    // Only send alerts for strong signals with high win probability
-    if ((signal.strength !== 'STRONG' && signal.strength !== 'VERY_STRONG') || signal.probability < 75) {
+    if (!this.config.botToken || !this.config.chatId) {
+      console.log('❌ Missing bot token or chat ID');
       return false;
     }
+
+    // Remove the duplicate filtering here since it's already done in App.tsx
+    console.log('✅ All conditions met, sending message...');
 
     const message = this.formatTradingMessage(signal, currentPrice);
+    console.log('📝 Message formatted:', message.substring(0, 100) + '...');
     
     try {
       const response = await fetch(`https://api.telegram.org/bot${this.config.botToken}/sendMessage`, {
@@ -32,6 +46,13 @@ export class TelegramService {
         }),
       });
 
+      const responseData = await response.json();
+      console.log('📡 Telegram API response:', {
+        ok: response.ok,
+        status: response.status,
+        data: responseData
+      });
+
       return response.ok;
     } catch (error) {
       console.error('Failed to send Telegram message:', error);
@@ -41,13 +62,13 @@ export class TelegramService {
 
   private formatTradingMessage(signal: TradingSignal, currentPrice: number): string {
     const emoji = signal.action === 'BUY' ? '🟢' : '🔴';
-    const strengthEmoji = '🚀'; // Combined strong signal emoji
+    const strengthEmoji = signal.strength === 'VERY_STRONG' ? '🚀🚀' : '🚀';
     
     return `
 ${emoji} <b>EUR/USD TRADING SIGNAL</b> ${strengthEmoji}
 
 <b>Action:</b> ${signal.action}
-<b>Strength:</b> STRONG
+<b>Strength:</b> ${signal.strength}
 <b>Confidence:</b> ${signal.confidence}%
 <b>Win Probability:</b> ${signal.probability}%
 
@@ -58,7 +79,7 @@ ${emoji} <b>EUR/USD TRADING SIGNAL</b> ${strengthEmoji}
 
 <b>Risk/Reward:</b> ${this.calculateRiskReward(signal)}
 
-⚠️ <i></i>
+⚠️ <i>Lương của mày 500k/ngày thôi.</i>
 
 <b>Time:</b> ${new Date(signal.timestamp).toLocaleString('vi-VN')}
     `.trim();

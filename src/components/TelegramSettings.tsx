@@ -125,11 +125,19 @@ export const TelegramSettings: React.FC<TelegramSettingsProps> = ({
               <button
                 onClick={onTestMessage}
                 disabled={!config.botToken || !config.chatId}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors mr-2"
               >
                 <Send className="w-4 h-4" />
                 <span>Test Message</span>
               </button>
+
+              <div className="mt-2 text-xs text-gray-400">
+                <div>Auto-send conditions:</div>
+                <div>• Signal: BUY/SELL only</div>
+                <div>• Strength: STRONG or VERY_STRONG</div>
+                <div>• Probability: ≥75%</div>
+                <div>• Cooldown: 1 minute between signals</div>
+              </div>
             </>
           )}
         </div>
