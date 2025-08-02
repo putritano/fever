@@ -169,6 +169,8 @@ function App() {
       take_profit: candles.length > 0 ? candles[candles.length - 1].close * 1.02 : 51000
     };
 
+    // IMPORTANT: Avoid using alert() in production code for better UX.
+    // Replace with a custom modal or toast notification.
     const success = await telegramService.sendTradingAlert(testSignal, testSignal.entry_price);
     if (success) {
       alert('Test message sent successfully!');
@@ -210,8 +212,7 @@ function App() {
     console.log('🔍 Telegram auto-send check:', {
       signal: currentSignal.action,
       strength: currentSignal.strength,
-      currentSignal.probability >= 75 &&
-      probability: currentSignal.probability,
+      probability: currentSignal.probability, // This was the problematic line, now correctly formatted
       isStrongSignal,
       isHighProbability,
       isActionable,
@@ -310,7 +311,7 @@ function App() {
               {!aiProcessing && enhancedAnalysis && !analysisConflict && (
                 <div className="flex items-center space-x-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-xs text-green-400">✅ AI loading...</span>
+                  <span className="text-xs text-green-400">✅ AI đã xác nhận</span>
                 </div>
               )}
               {!aiProcessing && !enhancedAnalysis && baseAnalysis && (
@@ -355,12 +356,12 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2">
-            <PriceChart 
-              candles={candles.slice(-100)} 
+            <PriceChart
+              candles={candles.slice(-100)}
               symbol={currentSymbol}
-              width={800} 
-              height={400} 
-              signals={displayAnalysis.signals} 
+              width={800}
+              height={400}
+              signals={displayAnalysis.signals}
             />
           </div>
 
@@ -397,7 +398,7 @@ function App() {
             <div>
               <h3 className="text-yellow-400 font-semibold mb-2">Risk Warning</h3>
               <p className="text-yellow-100 text-sm leading-relaxed">
-                Lương của mày 500k/ngày thôi.
+                Đừng tham lam. Lương của mày chỉ được 500 cành / ngày...
               </p>
             </div>
           </div>
