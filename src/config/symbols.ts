@@ -125,7 +125,7 @@ export const AVAILABLE_SYMBOLS: TradingSymbol[] = [
   }
 ];
 
-export const DEFAULT_SYMBOL = AVAILABLE_SYMBOLS[0]; // EUR/USDT as default
+export const DEFAULT_SYMBOL = AVAILABLE_SYMBOLS[4]; // EUR/USDT as default
 
 export const getSymbolByName = (symbolName: string): TradingSymbol | undefined => {
   return AVAILABLE_SYMBOLS.find(s => s.symbol === symbolName);
